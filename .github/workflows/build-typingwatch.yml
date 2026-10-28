@@ -7,6 +7,7 @@ on:
       - 'TypingWatch.exe'
       - 'src/TypingWatch_Complete_Online.cs'
       - '.github/workflows/build-typingwatch.yml'
+      - 'version.txt'
 
 jobs:
   package:
@@ -29,6 +30,57 @@ jobs:
           $text = $text.Replace('nextOnlineSync=DateTime.Now.AddSeconds(30);', 'nextOnlineSync=DateTime.Now.AddSeconds(5);')
           $newPayload = '                    string payload="{\"action\":\"heartbeat\",\"userId\":\""+onlineUserId+"\",\"typing\":\""+(typing?"true":"false")+"\",\"language\":\""+language+"\",\"wpm\":"+((int)Math.Round(displayedWpm))+",\"version\":\""+AppVersion+"\"}";'
           $text = [regex]::Replace($text, '(?m)^\s*string payload=.*heartbeat.*$', $newPayload)
+
+          $updateMethod = @'
+    void CheckForUpdates(bool manual)
+    {
+        if(updateCheckRunning) return;
+        updateCheckRunning=true;
+        updateButton.Enabled=false;
+        ThreadPool.QueueUserWorkItem(delegate
+        {
+            try
+            {
+                ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;
+                string url="https://raw.githubusercontent.com/typingMonery-cloud/typingWatch/main/version.txt?ts="+DateTime.UtcNow.Ticks.ToString();
+                string latest="";
+                using(WebClient wc=new WebClient())
+                {
+                    wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch/"+AppVersion;
+                    latest=wc.DownloadString(url).Trim();
+                }
+                Version currentVersion, latestVersion;
+                if(!Version.TryParse(AppVersion,out currentVersion) || !Version.TryParse(latest,out latestVersion))
+                    throw new Exception("Invalid version information.");
+                BeginInvoke((MethodInvoker)delegate
+                {
+                    updateCheckRunning=false;
+                    updateButton.Enabled=true;
+                    if(latestVersion>currentVersion)
+                        MessageBox.Show("New Typing Watch version is available: "+latest+".\r\n\r\nDownload the latest EXE from the GitHub Actions page.","Typing Watch Update",MessageBoxButtons.OK,MessageBoxIcon.Information);
+                    else if(manual)
+                        MessageBox.Show("You are using the latest Typing Watch version ("+AppVersion+").","Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Information);
+                });
+            }
+            catch(Exception ex)
+            {
+                try
+                {
+                    BeginInvoke((MethodInvoker)delegate
+                    {
+                        updateCheckRunning=false;
+                        updateButton.Enabled=true;
+                        if(manual) MessageBox.Show("Update check failed.\r\n\r\n"+ex.Message,"Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+                    });
+                }
+                catch { updateCheckRunning=false; }
+            }
+        });
+    }
+'@
+          $text = [regex]::Replace($text, '(?s)    void CheckForUpdates\(bool manual\).*?(?=\r?\n    void |\r?\n    static void Main\()|\z)', $updateMethod.TrimEnd())
+          if ($text -notmatch 'void CheckForUpdates\(bool manual\)') { throw 'Update checker method was not found.' }
+
           $text = $text.Replace('        Application.Run(new TypingWatch());', '        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException); Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e) { try { File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TypingWatch", "errors.log"), DateTime.Now.ToString("o")+" | UI | "+e.Exception+Environment.NewLine); } catch { } }; Application.Run(new TypingWatch());')
           $text = $text.Replace('        if(now.Second%5==0) SaveData();', '        if(now.Second%5==0) { try { SaveData(); } catch { } }')
           Set-Content -LiteralPath $patched -Value $text -Encoding UTF8
