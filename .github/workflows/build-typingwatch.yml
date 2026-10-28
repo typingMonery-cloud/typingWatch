@@ -15,7 +15,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build hardened online-sync EXE
+      - name: Build stable online-sync EXE
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
@@ -29,42 +29,13 @@ jobs:
           $text = $text.Replace('nextOnlineSync=DateTime.Now.AddSeconds(30);', 'nextOnlineSync=DateTime.Now.AddSeconds(5);')
           $newPayload = '                    string payload="{\"action\":\"heartbeat\",\"userId\":\""+onlineUserId+"\",\"typing\":\""+(typing?"true":"false")+"\",\"language\":\""+language+"\",\"wpm\":"+((int)Math.Round(displayedWpm))+",\"version\":\""+AppVersion+"\"}";'
           $text = [regex]::Replace($text, '(?m)^\s*string payload=.*heartbeat.*$', $newPayload)
-
-          $oldMain = @'
-    [STAThread] static void Main()
-    {
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
-        Application.Run(new TypingWatch());
-    }
-'@
-          $newMain = @'
-    [STAThread] static void Main()
-    {
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
-        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-        Application.ThreadException += delegate(object sender, ThreadExceptionEventArgs e)
-        {
-            try { File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TypingWatch", "errors.log"), DateTime.Now.ToString("o")+" | UI | "+e.Exception+Environment.NewLine); } catch { }
-        };
-        AppDomain.CurrentDomain.UnhandledException += delegate(object sender, UnhandledExceptionEventArgs e)
-        {
-            try { File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TypingWatch", "errors.log"), DateTime.Now.ToString("o")+" | APP | "+e.ExceptionObject+Environment.NewLine); } catch { }
-        };
-        Application.Run(new TypingWatch());
-    }
-'@
-          if ($text.Contains($oldMain)) { $text = $text.Replace($oldMain, $newMain) } else { throw 'Main method pattern was not found.' }
-
+          $text = $text.Replace('        Application.Run(new TypingWatch());', '        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException); Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e) { try { File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TypingWatch", "errors.log"), DateTime.Now.ToString("o")+" | UI | "+e.Exception+Environment.NewLine); } catch { } }; Application.Run(new TypingWatch());')
           $text = $text.Replace('        if(now.Second%5==0) SaveData();', '        if(now.Second%5==0) { try { SaveData(); } catch { } }')
-          $text = $text.Replace('                SaveData();\n                UpdateWatch();', '                try { SaveData(); } catch { }\n                UpdateWatch();')
           Set-Content -LiteralPath $patched -Value $text -Encoding UTF8
 
           $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
           if (-not (Test-Path $csc)) { $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe' }
           if (-not (Test-Path $csc)) { throw 'C# compiler was not found.' }
-
           & $csc /nologo /target:winexe /out:TypingWatch.exe /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll $patched
           if ($LASTEXITCODE -ne 0) { throw 'C# compilation failed.' }
           if (-not (Test-Path 'TypingWatch.exe')) { throw 'TypingWatch.exe was not created.' }
