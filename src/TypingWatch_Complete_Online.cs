@@ -150,11 +150,11 @@ class TypingWatch : Form
         announcementLabel.AutoEllipsis=true;
         Controls.Add(announcementLabel);
 
-        onlineUsersLabel.SetBounds(7, 552, ClientSize.Width-14, 25);
+        onlineUsersLabel.SetBounds(ClientSize.Width-98, 3, 90, 17);
         onlineUsersLabel.Anchor=AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;
-        onlineUsersLabel.Font=new Font("Segoe UI",8,FontStyle.Bold);
-        onlineUsersLabel.TextAlign=ContentAlignment.MiddleCenter;
-        onlineUsersLabel.Text="🌐 Online users: --";
+        onlineUsersLabel.Font=new Font("Segoe UI",7,FontStyle.Bold);
+        onlineUsersLabel.TextAlign=ContentAlignment.MiddleRight;
+        onlineUsersLabel.Text="Online: --";
         Controls.Add(onlineUsersLabel);
 
         LoadData();
@@ -526,7 +526,7 @@ class TypingWatch : Form
                         string stats=wc.DownloadString(OnlineServerUrl+"?action=stats");
                         int n; string live=ExtractJsonValue(stats,"liveUsers");
                         if(int.TryParse(live,out n))
-                            BeginInvoke((MethodInvoker)delegate { onlineUsers=Math.Max(0,n); onlineUsersLabel.Text="🌐 Online users right now: "+onlineUsers; });
+                            BeginInvoke((MethodInvoker)delegate { onlineUsers=Math.Max(0,n); onlineUsersLabel.Text="Online: "+onlineUsers; });
                     }
                     catch { }
                     try
