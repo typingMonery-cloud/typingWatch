@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Net;
 using System.Threading;
+using FormsTimer = System.Windows.Forms.Timer;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -38,7 +39,7 @@ class TypingWatch : Form
     double displayedWpm=0;
     string folder,totalFile,dayFile,date;
     string hindiTotalFile,englishTotalFile,hindiDayFile,englishDayFile;
-    Timer timer=new Timer(); Label label=new Label(); Label licenseStatusLabel=new Label(); Label ownerLabel=new Label(); Button editButton=new Button(); Button warningButton=new Button(); Button dashboardButton=new Button(); Button chatButton=new Button(); SpeedMeter meter=new SpeedMeter();
+    FormsTimer timer=new FormsTimer(); Label label=new Label(); Label licenseStatusLabel=new Label(); Label ownerLabel=new Label(); Button editButton=new Button(); Button warningButton=new Button(); Button dashboardButton=new Button(); Button chatButton=new Button(); SpeedMeter meter=new SpeedMeter();
     string settingsFile;
     string trialFile, licenseFile;
     const string LicenseSalt = "TW2026-OWNER-ASHISH-YADAV-CHANGE-BEFORE-RELEASE";
@@ -929,7 +930,7 @@ class LiveChatForm : Form
     TextBox input=new TextBox();
     ListBox messages=new ListBox();
     Button send=new Button();
-    Timer refreshTimer=new Timer();
+    FormsTimer refreshTimer=new FormsTimer();
     bool busy=false;
 
     public LiveChatForm(string url,string id)
