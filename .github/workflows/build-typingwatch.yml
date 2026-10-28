@@ -15,7 +15,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build fixed online-sync EXE
+      - name: Build hardened online-sync EXE
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
@@ -24,11 +24,41 @@ jobs:
           if (-not (Test-Path $source)) { throw 'Source C# file was not found.' }
 
           $text = Get-Content -LiteralPath $source -Raw
-          $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.1";')
+          $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.2";')
           $text = $text.Replace('if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(30); SyncOnlineNow(); }', 'if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(5); SyncOnlineNow(); }')
           $text = $text.Replace('nextOnlineSync=DateTime.Now.AddSeconds(30);', 'nextOnlineSync=DateTime.Now.AddSeconds(5);')
           $newPayload = '                    string payload="{\"action\":\"heartbeat\",\"userId\":\""+onlineUserId+"\",\"typing\":\""+(typing?"true":"false")+"\",\"language\":\""+language+"\",\"wpm\":"+((int)Math.Round(displayedWpm))+",\"version\":\""+AppVersion+"\"}";'
           $text = [regex]::Replace($text, '(?m)^\s*string payload=.*heartbeat.*$', $newPayload)
+
+          $oldMain = @'
+    [STAThread] static void Main()
+    {
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
+        Application.Run(new TypingWatch());
+    }
+'@
+          $newMain = @'
+    [STAThread] static void Main()
+    {
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += delegate(object sender, ThreadExceptionEventArgs e)
+        {
+            try { File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TypingWatch", "errors.log"), DateTime.Now.ToString("o")+" | UI | "+e.Exception+Environment.NewLine); } catch { }
+        };
+        AppDomain.CurrentDomain.UnhandledException += delegate(object sender, UnhandledExceptionEventArgs e)
+        {
+            try { File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TypingWatch", "errors.log"), DateTime.Now.ToString("o")+" | APP | "+e.ExceptionObject+Environment.NewLine); } catch { }
+        };
+        Application.Run(new TypingWatch());
+    }
+'@
+          if ($text.Contains($oldMain)) { $text = $text.Replace($oldMain, $newMain) } else { throw 'Main method pattern was not found.' }
+
+          $text = $text.Replace('        if(now.Second%5==0) SaveData();', '        if(now.Second%5==0) { try { SaveData(); } catch { } }')
+          $text = $text.Replace('                SaveData();\n                UpdateWatch();', '                try { SaveData(); } catch { }\n                UpdateWatch();')
           Set-Content -LiteralPath $patched -Value $text -Encoding UTF8
 
           $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
