@@ -1,0 +1,38 @@
+name: Build Typing Watch (Windows)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/TypingWatch_Complete_Online.cs'
+      - '.github/workflows/build-typingwatch.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Compile Windows Forms app
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = Join-Path $env:GITHUB_WORKSPACE 'src/TypingWatch_Complete_Online.cs'
+          $outDir = Join-Path $env:GITHUB_WORKSPACE 'dist'
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+          $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+          if (-not (Test-Path $compiler)) {
+            $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe'
+          }
+          if (-not (Test-Path $compiler)) { throw 'C# compiler csc.exe not found on runner.' }
+          & $compiler /nologo /target:winexe /optimize+ /out:"$outDir\TypingWatch.exe" /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll "$source"
+          if ($LASTEXITCODE -ne 0) { throw "C# compilation failed with exit code $LASTEXITCODE" }
+          if (-not (Test-Path "$outDir\TypingWatch.exe")) { throw 'Compilation did not produce TypingWatch.exe.' }
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TypingWatch-Windows-EXE
+          path: dist/TypingWatch.exe
+          if-no-files-found: error
