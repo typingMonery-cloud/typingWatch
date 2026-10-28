@@ -27,10 +27,8 @@ jobs:
           $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.1";')
           $text = $text.Replace('if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(30); SyncOnlineNow(); }', 'if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(5); SyncOnlineNow(); }')
           $text = $text.Replace('nextOnlineSync=DateTime.Now.AddSeconds(30);', 'nextOnlineSync=DateTime.Now.AddSeconds(5);')
-          $oldPayload = 'string payload="{\\"action\\":\\"heartbeat\\",\\"userId\\":\\""+onlineUserId+"\\",\\"typing\\":\\""+(typing?"true":"false")+"\\",\\"language\\":\\""+language+"\\"}";'
-          $newPayload = 'string payload="{\\"action\\":\\"heartbeat\\",\\"userId\\":\\""+onlineUserId+"\\",\\"typing\\":\\""+(typing?"true":"false")+"\\",\\"language\\":\\""+language+"\\",\\"wpm\\":"+((int)Math.Round(displayedWpm))+",\\"version\\":\\""+AppVersion+"\\"}";'
-          if (-not $text.Contains($oldPayload)) { throw 'Heartbeat payload pattern was not found.' }
-          $text = $text.Replace($oldPayload, $newPayload)
+          $newPayload = '                    string payload="{\"action\":\"heartbeat\",\"userId\":\""+onlineUserId+"\",\"typing\":\""+(typing?"true":"false")+"\",\"language\":\""+language+"\",\"wpm\":"+((int)Math.Round(displayedWpm))+",\"version\":\""+AppVersion+"\"}";'
+          $text = [regex]::Replace($text, '(?m)^\s*string payload=.*$', $newPayload)
           Set-Content -LiteralPath $patched -Value $text -Encoding UTF8
 
           $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
