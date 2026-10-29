@@ -1,603 +1,613 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Typing Watch Admin</title>
 
 <style>
 *{box-sizing:border-box}
-
 body{
-  margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#eef4f7;
-  color:#13212b;
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f4f6f8;
+    color:#1f2937;
 }
-
-.top{
-  background:#16324f;
-  color:#fff;
-  padding:18px 22px;
+.container{
+    max-width:1250px;
+    margin:auto;
+    padding:20px;
 }
-
-.topin{
-  max-width:1200px;
-  margin:auto;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:15px;
+.header{
+    background:#111827;
+    color:white;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:20px;
 }
-
-.top h1{
-  margin:0;
-  font-size:24px
+.header h1{
+    margin:0 0 6px;
+    font-size:26px;
 }
-
-.top small{
-  opacity:.75
+.header p{
+    margin:0;
+    color:#cbd5e1;
 }
-
-.wrap{
-  max-width:1200px;
-  margin:auto;
-  padding:20px
-}
-
-.bar,.section{
-  background:#fff;
-  border:1px solid #d6e0e6;
-  border-radius:14px
-}
-
-.bar{
-  padding:14px;
-  margin-bottom:16px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:center
-}
-
-.btn{
-  border:0;
-  border-radius:9px;
-  padding:10px 14px;
-  font-weight:700;
-  cursor:pointer;
-  background:#16324f;
-  color:#fff;
-  text-decoration:none;
-  display:inline-block
-}
-
-.btn.alt{
-  background:#2b6f77
-}
-
-.btn.danger{
-  background:#9b3333
-}
-
 .status{
-  margin-left:auto;
-  font-size:13px;
-  color:#647783
+    margin-top:12px;
+    padding:10px 14px;
+    border-radius:8px;
+    background:#374151;
+    display:inline-block;
 }
+.status.ok{background:#166534}
+.status.error{background:#991b1b}
+.status.wait{background:#92400e}
 
 .cards{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:12px
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:14px;
+    margin-bottom:20px;
 }
-
 .card{
-  background:#fff;
-  border:1px solid #d6e0e6;
-  border-radius:14px;
-  padding:17px
+    background:white;
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+.card .label{
+    font-size:13px;
+    color:#64748b;
+    margin-bottom:8px;
+}
+.card .value{
+    font-size:28px;
+    font-weight:bold;
+}
+.card .small{
+    font-size:12px;
+    color:#94a3b8;
+    margin-top:5px;
 }
 
-.label{
-  font-size:12px;
-  color:#647783
+.panel{
+    background:white;
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+.panel h2{
+    margin-top:0;
+    font-size:20px;
 }
 
-.num{
-  font-size:29px;
-  font-weight:800;
-  margin-top:8px
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
 }
 
-.section{
-  margin-top:16px;
-  padding:18px
+input,select,button,textarea{
+    font-family:inherit;
+}
+input,select,textarea{
+    width:100%;
+    padding:10px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    margin-top:6px;
+}
+textarea{
+    min-height:90px;
+    resize:vertical;
+}
+button{
+    border:0;
+    border-radius:7px;
+    padding:10px 15px;
+    cursor:pointer;
+    background:#2563eb;
+    color:white;
+    font-weight:bold;
+    margin:5px 5px 5px 0;
+}
+button:hover{
+    opacity:.9;
+}
+button.gray{background:#475569}
+button.green{background:#15803d}
+button.red{background:#dc2626}
+button.orange{background:#d97706}
+
+label{
+    display:block;
+    margin-bottom:12px;
+    font-size:14px;
+    font-weight:bold;
 }
 
-.section h2{
-  font-size:18px;
-  margin:0 0 12px
+.table-wrap{
+    overflow:auto;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:700px;
+}
+th,td{
+    padding:10px;
+    border-bottom:1px solid #e5e7eb;
+    text-align:left;
+    font-size:13px;
+}
+th{
+    background:#f8fafc;
+}
+.badge{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:bold;
+}
+.badge.online{background:#dcfce7;color:#166534}
+.badge.offline{background:#fee2e2;color:#991b1b}
+.badge.active{background:#dcfce7;color:#166534}
+.badge.inactive{background:#fef3c7;color:#92400e}
+
+.connection{
+    background:#f8fafc;
+    padding:15px;
+    border-radius:8px;
+    line-height:1.8;
+}
+.code{
+    background:#111827;
+    color:#e5e7eb;
+    padding:10px;
+    border-radius:6px;
+    word-break:break-all;
+    font-family:monospace;
+    font-size:12px;
 }
 
-.tablewrap{
-  overflow:auto
+.message{
+    padding:10px;
+    border-radius:7px;
+    margin-top:10px;
+    display:none;
 }
+.message.show{display:block}
+.message.ok{background:#dcfce7;color:#166534}
+.message.error{background:#fee2e2;color:#991b1b}
 
-.table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:760px
+@media(max-width:900px){
+    .cards{
+        grid-template-columns:repeat(2,1fr);
+    }
+    .grid{
+        grid-template-columns:1fr;
+    }
 }
-
-.table th,.table td{
-  padding:10px;
-  border-bottom:1px solid #e4ebef;
-  text-align:left;
-  font-size:13px
-}
-
-.table th{
-  background:#f5f8fa
-}
-
-.pill{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:999px;
-  background:#e7f5ea;
-  color:#23743a;
-  font-weight:700;
-  font-size:11px
-}
-
-.warn{
-  background:#fff4dc;
-  color:#8a5b00
-}
-
-.box{
-  padding:12px;
-  background:#f5f8fa;
-  border-radius:10px;
-  font-size:13px;
-  line-height:1.55
-}
-
-.grid2{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px
-}
-
-.formgrid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:12px
-}
-
-.field{
-  display:flex;
-  flex-direction:column;
-  gap:6px
-}
-
-.field label{
-  font-size:12px;
-  color:#647783;
-  font-weight:700
-}
-
-.field input,.field textarea{
-  border:1px solid #cbd8df;
-  border-radius:9px;
-  padding:10px;
-  font:inherit
-}
-
-.field textarea{
-  min-height:90px;
-  resize:vertical
-}
-
-.full{
-  grid-column:1/-1
-}
-
-.result{
-  margin-top:10px;
-  font-size:13px;
-  overflow-wrap:anywhere
-}
-
-.muted{
-  color:#71828d
-}
-
-@media(max-width:1000px){
-  .cards{
-    grid-template-columns:repeat(3,1fr)
-  }
-}
-
-@media(max-width:850px){
-  .cards{
-    grid-template-columns:repeat(2,1fr)
-  }
-
-  .grid2,.formgrid{
-    grid-template-columns:1fr
-  }
-}
-
-@media(max-width:480px){
-  .cards{
-    grid-template-columns:1fr
-  }
+@media(max-width:550px){
+    .cards{
+        grid-template-columns:1fr;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<header class="top">
-  <div class="topin">
-    <div>
-      <h1>Typing Watch Admin</h1>
-      <small>Live control &amp; monitoring panel</small>
-    </div>
+<div class="container">
 
-    <div id="serverState">
-      ● Checking server...
-    </div>
-  </div>
-</header>
+<div class="header">
+    <h1>Typing Watch Admin</h1>
+    <p>Live control & monitoring panel</p>
+    <div id="status" class="status wait">● Connecting...</div>
+</div>
 
-<main class="wrap">
-
-  <div class="bar">
-
-    <button class="btn" onclick="refreshAll(true)">
-      ↻ Refresh
-    </button>
-
-    <button class="btn alt" onclick="testConnection()">
-      Test Server
-    </button>
-
-    <button class="btn alt" onclick="loadConfig()">
-      📢 Refresh Announcement
-    </button>
-
-    <button class="btn danger" onclick="toggleMaintenance()">
-      Toggle Maintenance
-    </button>
-
-    <a
-      class="btn"
-      href="https://github.com/typingMonery-cloud/typingWatch/raw/7457c2cdd5a7fb03f45042148690f688e98247d9/TypingWatch.exe">
-      ⬇ Original Working EXE
-    </a>
-
-    <button class="btn danger" onclick="clearToken()">
-      Clear Admin Token
-    </button>
-
-    <span class="status" id="lastUpdate">
-      Not loaded
-    </span>
-
-  </div>
-
-
-  <!-- DASHBOARD CARDS -->
-
-  <section class="cards">
+<!-- DASHBOARD CARDS -->
+<div class="cards">
 
     <div class="card">
-      <div class="label">LIVE USERS</div>
-      <div class="num" id="liveUsers">—</div>
+        <div class="label">LIVE USERS</div>
+        <div id="liveUsers" class="value">—</div>
+        <div class="small">Currently connected</div>
     </div>
 
     <div class="card">
-      <div class="label">TYPING NOW</div>
-      <div class="num" id="typingNow">—</div>
+        <div class="label">TYPING NOW</div>
+        <div id="typingNow" class="value">—</div>
+        <div class="small">Users currently typing</div>
     </div>
 
     <div class="card">
-      <div class="label">APP VERSION</div>
-      <div class="num" id="appVersion">—</div>
+        <div class="label">APP VERSION</div>
+        <div id="appVersion" class="value">—</div>
+        <div class="small">Current version</div>
     </div>
 
     <div class="card">
-      <div class="label">DOWNLOADS</div>
-      <div class="num" id="downloadCount">—</div>
+        <div class="label">DOWNLOADS</div>
+        <div id="downloadsCount" class="value">—</div>
+        <div class="small">Total download events</div>
     </div>
 
     <div class="card">
-      <div class="label">ACTIVE LICENSES</div>
-      <div class="num" id="activeLicenses">—</div>
+        <div class="label">ACTIVE LICENSES</div>
+        <div id="activeLicenses" class="value">—</div>
+        <div class="small">Active customers</div>
     </div>
 
-  </section>
+</div>
 
+<!-- ADMIN LOGIN -->
+<div class="panel">
+    <h2>🔐 Admin Authentication</h2>
 
-  <!-- LIVE USERS -->
+    <label>
+        ADMIN KEY
+        <input type="password" id="adminKey" placeholder="Enter ADMIN_KEY">
+    </label>
 
-  <section class="section">
+    <button onclick="saveAdminKey()">Save Admin Key</button>
+    <button class="gray" onclick="clearAdminKey()">Clear</button>
+    <button class="green" onclick="testConnection()">Test Connection</button>
 
-    <h2>Live Users</h2>
+    <div id="authMessage" class="message"></div>
+</div>
 
-    <div class="tablewrap">
+<!-- CONNECTION -->
+<div class="panel">
+    <h2>🔌 Connection</h2>
 
-      <table class="table">
-
-        <thead>
-          <tr>
-            <th>User ID</th>
-            <th>Last Seen</th>
-            <th>Typing</th>
-            <th>Language</th>
-            <th>WPM</th>
-            <th>Version</th>
-          </tr>
-        </thead>
-
-        <tbody id="users">
-          <tr>
-            <td colspan="6">Loading…</td>
-          </tr>
-        </tbody>
-
-      </table>
-
+    <div class="connection">
+        <b>Backend:</b> Google Apps Script<br>
+        <b>Heartbeat:</b> Typing Watch → server<br>
+        <b>Stats:</b> <span class="code">?action=stats</span><br>
+        <b>Config:</b> <span class="code">?action=config</span><br>
+        <b>Admin:</b> JSONP authenticated requests
     </div>
 
-  </section>
+    <button onclick="testConnection()">Connection Test</button>
+    <button class="gray" onclick="refreshAll(true)">Refresh Now</button>
 
+    <div id="connectionMessage" class="message"></div>
+</div>
 
-  <!-- ANNOUNCEMENT / CONNECTION -->
+<!-- ANNOUNCEMENT -->
+<div class="panel">
+    <h2>📢 Announcement</h2>
 
-  <section class="grid2">
+    <label>
+        Message
+        <textarea id="announcement" placeholder="Write announcement for customers..."></textarea>
+    </label>
 
-    <div class="section">
+    <button onclick="saveAnnouncement()">Publish Announcement</button>
+    <button class="red" onclick="clearAnnouncement()">Clear Announcement</button>
 
-      <h2>Announcement</h2>
+    <div id="announcementMessage" class="message"></div>
+</div>
 
-      <div class="box" id="announcement">
-        Loading…
-      </div>
+<!-- APP CONTROL -->
+<div class="panel">
+    <h2>⚙️ App Controls</h2>
 
-    </div>
+    <div class="grid">
 
+        <div>
+            <label>
+                App Version
+                <input id="version" placeholder="Example: 1.0.5">
+            </label>
 
-    <div class="section">
+            <button onclick="saveVersion()">Save Version</button>
+        </div>
 
-      <h2>Connection</h2>
+        <div>
+            <label>
+                Minimum Version
+                <input id="minimumVersion" placeholder="Example: 1.0.0">
+            </label>
 
-      <div class="box">
+            <button onclick="saveMinimumVersion()">Save Minimum Version</button>
+        </div>
 
-        Backend: Google Apps Script<br>
-        Heartbeat: Typing Watch → server<br>
-        Stats: <code>?action=stats</code><br>
-        Config: <code>?action=config</code><br>
-        Health: <code>?action=health</code><br>
-        Private admin data: authenticated POST requests
+        <div>
+            <label>
+                Target Hours
+                <input id="targetHours" type="number" step="0.1" placeholder="50">
+            </label>
 
-      </div>
+            <button onclick="saveTargetHours()">Save Target Hours</button>
+        </div>
 
-    </div>
+        <div>
+            <label>
+                Online Minutes
+                <input id="onlineMinutes" type="number" placeholder="5">
+            </label>
 
-  </section>
+            <button onclick="saveOnlineMinutes()">Save Online Minutes</button>
+        </div>
 
+        <div>
+            <label>
+                WPM
+                <input id="wpm" type="number" placeholder="30">
+            </label>
 
-  <!-- ADMIN CONTROLS -->
+            <button onclick="saveWPM()">Save WPM</button>
+        </div>
 
-  <section class="section">
+        <div>
+            <label>
+                Download / Update URL
+                <input id="downloadURL" placeholder="https://...">
+            </label>
 
-    <h2>Admin Controls</h2>
-
-    <div class="box muted">
-
-      Admin token इस browser session में ही रखा जाता है।
-      इसे public source code में न लिखें।
-      Private data देखने और बदलाव सेव करने के लिए सही token आवश्यक है।
-
-    </div>
-
-
-    <div class="formgrid" style="margin-top:12px">
-
-      <div class="field full">
-
-        <label>Announcement</label>
-
-        <textarea
-          id="announcementInput"
-          placeholder="Message shown by Typing Watch"></textarea>
-
-        <button class="btn" onclick="setAnnouncement()">
-          Save Announcement
-        </button>
-
-      </div>
-
-
-      <div class="field">
-
-        <label>App Version</label>
-
-        <input
-          id="versionInput"
-          placeholder="1.0.3">
-
-        <button class="btn" onclick="setVersion()">
-          Save Version
-        </button>
-
-      </div>
-
-
-      <div class="field">
-
-        <label>Online Threshold (minutes)</label>
-
-        <input
-          id="thresholdInput"
-          type="number"
-          min="1"
-          max="1440"
-          value="2">
-
-        <button class="btn" onclick="setThreshold()">
-          Save Threshold
-        </button>
-
-      </div>
-
-
-      <div class="field">
-
-        <label>License Key</label>
-
-        <input
-          id="licenseKey"
-          placeholder="TW-PRO-2026-0002">
-
-        <input
-          id="licenseUser"
-          placeholder="User ID (optional)">
-
-        <input
-          id="licenseExpiry"
-          placeholder="Expiry date (optional)">
-
-        <button class="btn" onclick="addLicense()">
-          Add License
-        </button>
-
-      </div>
+            <button onclick="saveDownloadURL()">Save Download URL</button>
+        </div>
 
     </div>
 
+    <br>
 
-    <div
-      class="result"
-      id="adminResult"
-      role="status">
+    <button class="orange" onclick="enableMaintenance()">Enable Maintenance</button>
+    <button class="green" onclick="disableMaintenance()">Disable Maintenance</button>
+
+    <div id="controlMessage" class="message"></div>
+</div>
+
+<!-- LIVE USERS -->
+<div class="panel">
+    <h2>👥 Live Users</h2>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Status</th>
+                    <th>Typing</th>
+                    <th>Language</th>
+                    <th>Version</th>
+                    <th>Last Seen</th>
+                    <th>License</th>
+                </tr>
+            </thead>
+            <tbody id="usersBody">
+                <tr>
+                    <td colspan="7">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- LICENSES -->
+<div class="panel">
+    <h2>🔑 Licenses</h2>
+
+    <button onclick="loadLicenses()">Refresh Licenses</button>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>License Key</th>
+                    <th>User ID</th>
+                    <th>Status</th>
+                    <th>Plan</th>
+                    <th>Expiry</th>
+                    <th>Created</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody id="licensesBody">
+                <tr>
+                    <td colspan="7">Admin key required</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- CREATE LICENSE -->
+<div class="panel">
+    <h2>➕ Create License</h2>
+
+    <div class="grid">
+
+        <label>
+            License Key
+            <input id="newLicenseKey" placeholder="Example: TW-2026-0001">
+        </label>
+
+        <label>
+            User ID
+            <input id="newUserId" placeholder="Customer User ID">
+        </label>
+
+        <label>
+            Plan Type
+            <input id="newPlanType" value="Standard" placeholder="Standard">
+        </label>
+
+        <label>
+            Expiry Date
+            <input id="newExpiryDate" type="date">
+        </label>
+
+        <label>
+            Notes
+            <input id="newNotes" placeholder="Customer notes">
+        </label>
+
     </div>
 
-  </section>
+    <button class="green" onclick="createLicense()">Create License</button>
 
+    <div id="licenseMessage" class="message"></div>
+</div>
 
-  <!-- LICENSES -->
+<!-- DOWNLOADS -->
+<div class="panel">
+    <h2>⬇️ Download Events</h2>
 
-  <section class="section">
+    <button onclick="loadDownloads()">Refresh Downloads</button>
 
-    <h2>Licenses</h2>
-
-    <div class="tablewrap">
-
-      <table class="table">
-
-        <thead>
-
-          <tr>
-            <th>License</th>
-            <th>Status</th>
-            <th>User ID</th>
-            <th>Created</th>
-            <th>Expires</th>
-          </tr>
-
-        </thead>
-
-        <tbody id="licenses">
-
-          <tr>
-            <td colspan="5">
-              Click Refresh to load private data.
-            </td>
-          </tr>
-
-        </tbody>
-
-      </table>
-
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User ID</th>
+                    <th>Version</th>
+                    <th>Event</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="downloadsBody">
+                <tr>
+                    <td colspan="5">Admin key required</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
+</div>
 
-  </section>
+<!-- SEARCH CUSTOMER -->
+<div class="panel">
+    <h2>🔎 Search Customer</h2>
 
+    <label>
+        User ID / License Key
+        <input id="searchText" placeholder="Enter customer ID or license key">
+    </label>
 
-  <!-- DOWNLOADS -->
+    <button onclick="searchCustomer()">Search</button>
 
-  <section class="section">
+    <div id="searchResult"></div>
+</div>
 
-    <h2>Recent Downloads</h2>
+<div style="text-align:center;color:#94a3b8;padding:20px">
+    Typing Watch Admin Panel
+</div>
 
-    <div class="tablewrap">
-
-      <table class="table">
-
-        <thead>
-
-          <tr>
-            <th>Time</th>
-            <th>Version</th>
-            <th>Event</th>
-            <th>User ID</th>
-          </tr>
-
-        </thead>
-
-        <tbody id="downloads">
-
-          <tr>
-            <td colspan="4">
-              Click Refresh to load private data.
-            </td>
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </section>
-
-</main>
-
+</div>
 
 <script>
 
-'use strict';
-
-
 /* =========================================================
-   TYPING WATCH BACKEND
-   NEW / CORRECT GOOGLE APPS SCRIPT URL
+   TYPING WATCH API
    ========================================================= */
 
 const API =
-'https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec';
+"https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec";
+
+let callbackCounter = 0;
 
 
 /* =========================================================
-   HTML ESCAPE
+   JSONP REQUEST
    ========================================================= */
 
-function esc(v) {
+function jsonp(params, timeoutMs=15000){
 
-  return String(v == null ? '' : v)
-    .replace(/[&<>"]/g, function(m) {
+    return new Promise((resolve,reject)=>{
 
-      return {
-        '&':'&amp;',
-        '<':'&lt;',
-        '>':'&gt;',
-        '"':'&quot;'
-      }[m];
+        const callbackName =
+            "__tw_admin_cb_" +
+            Date.now() +
+            "_" +
+            (++callbackCounter);
+
+        const script = document.createElement("script");
+
+        let finished = false;
+
+        function cleanup(){
+
+            if(script.parentNode){
+                script.parentNode.removeChild(script);
+            }
+
+            try{
+                delete window[callbackName];
+            }catch(e){
+                window[callbackName] = undefined;
+            }
+
+        }
+
+        const timer = setTimeout(()=>{
+
+            if(finished) return;
+
+            finished = true;
+
+            cleanup();
+
+            reject(new Error("Request timeout"));
+
+        },timeoutMs);
+
+
+        window[callbackName] = function(data){
+
+            if(finished) return;
+
+            finished = true;
+
+            clearTimeout(timer);
+
+            cleanup();
+
+            resolve(data);
+
+        };
+
+
+        const query = new URLSearchParams();
+
+        Object.keys(params || {}).forEach(key=>{
+
+            const value = params[key];
+
+            if(value !== undefined && value !== null){
+                query.set(key,String(value));
+            }
+
+        });
+
+        query.set("callback",callbackName);
+
+        query.set("_",Date.now().toString());
+
+
+        script.src = API + "?" + query.toString();
+
+        script.onerror = function(){
+
+            if(finished) return;
+
+            finished = true;
+
+            clearTimeout(timer);
+
+            cleanup();
+
+            reject(new Error("Failed to load backend"));
+
+        };
+
+
+        document.body.appendChild(script);
 
     });
 
@@ -605,965 +615,861 @@ function esc(v) {
 
 
 /* =========================================================
-   ADMIN TOKEN
+   HELPERS
    ========================================================= */
 
-function token(promptIfMissing = true) {
+function getAdminKey(){
 
-  let t =
-    sessionStorage.getItem('tw_admin_token') || '';
-
-  if (!t && promptIfMissing) {
-
-    t =
-      prompt('Enter Typing Watch admin token:') || '';
-
-    t = t.trim();
-
-    if (t) {
-
-      sessionStorage.setItem(
-        'tw_admin_token',
-        t
-      );
-
-    }
-
-  }
-
-  return t;
+    return sessionStorage.getItem("TW_ADMIN_KEY") || "";
 
 }
 
 
-/* =========================================================
-   CLEAR TOKEN
-   ========================================================= */
+function saveAdminKey(){
 
-function clearToken() {
+    const key =
+        document.getElementById("adminKey").value.trim();
 
-  sessionStorage.removeItem(
-    'tw_admin_token'
-  );
+    if(!key){
 
-  document.getElementById(
-    'adminResult'
-  ).textContent =
-    'Admin token cleared from this browser session.';
-
-  document.getElementById(
-    'licenses'
-  ).innerHTML =
-    '<tr><td colspan="5">Admin token cleared. Click Refresh to authenticate again.</td></tr>';
-
-  document.getElementById(
-    'downloads'
-  ).innerHTML =
-    '<tr><td colspan="4">Admin token cleared. Click Refresh to authenticate again.</td></tr>';
-
-  document.getElementById(
-    'users'
-  ).innerHTML =
-    '<tr><td colspan="6">Admin token cleared. Click Refresh to authenticate again.</td></tr>';
-
-  document.getElementById(
-    'activeLicenses'
-  ).textContent = '—';
-
-}
-
-
-/* =========================================================
-   GET REQUEST
-   ========================================================= */
-
-async function get(path) {
-
-  const url =
-    API + path;
-
-  const r =
-    await fetch(url, {
-      method:'GET',
-      cache:'no-store',
-      redirect:'follow'
-    });
-
-  if (!r.ok) {
-
-    throw new Error(
-      'HTTP ' + r.status
-    );
-
-  }
-
-  const d =
-    await r.json();
-
-  if (
-    d.success === false ||
-    d.ok === false
-  ) {
-
-    throw new Error(
-      d.error ||
-      d.message ||
-      'Server request failed'
-    );
-
-  }
-
-  return d;
-
-}
-
-
-/* =========================================================
-   POST REQUEST
-   ========================================================= */
-
-async function post(body) {
-
-  const r =
-    await fetch(API, {
-
-      method:'POST',
-
-      headers:{
-        'Content-Type':
-          'text/plain;charset=utf-8'
-      },
-
-      body:
-        JSON.stringify(body),
-
-      cache:'no-store',
-
-      redirect:'follow'
-
-    });
-
-
-  if (!r.ok) {
-
-    throw new Error(
-      'HTTP ' + r.status
-    );
-
-  }
-
-
-  const d =
-    await r.json();
-
-
-  if (
-    d.success === false ||
-    d.ok === false
-  ) {
-
-    throw new Error(
-      d.error ||
-      d.message ||
-      'Server request failed'
-    );
-
-  }
-
-
-  return d;
-
-}
-
-
-/* =========================================================
-   ADMIN READ
-   ========================================================= */
-
-async function adminRead(
-  op,
-  askForToken = false
-) {
-
-  const t =
-    token(askForToken);
-
-  if (!t) {
-
-    throw new Error(
-      'Admin token required. Click Refresh and enter your token.'
-    );
-
-  }
-
-  return await post({
-
-    action:'admin',
-
-    token:t,
-
-    op:op
-
-  });
-
-}
-
-
-/* =========================================================
-   LOAD STATS
-   ========================================================= */
-
-async function loadStats(
-  askForToken = false
-) {
-
-  try {
-
-    const d =
-      await get('?action=stats');
-
-
-    document.getElementById(
-      'liveUsers'
-    ).textContent =
-      d.liveUsers ??
-      d.onlineUsers ??
-      '—';
-
-
-    document.getElementById(
-      'typingNow'
-    ).textContent =
-      d.typingNow ??
-      '—';
-
-
-    document.getElementById(
-      'downloadCount'
-    ).textContent =
-      d.downloadCount ??
-      '—';
-
-
-    document.getElementById(
-      'serverState'
-    ).textContent =
-      '● Server online';
-
-
-    /* PRIVATE LIVE USER DATA */
-
-    try {
-
-      const usersData =
-        await adminRead(
-          'users',
-          askForToken
+        showMessage(
+            "authMessage",
+            "Please enter ADMIN_KEY",
+            "error"
         );
 
-
-      const list =
-        usersData.users ||
-        usersData.data?.users ||
-        [];
-
-
-      renderUsers(list);
-
-
-    } catch (e) {
-
-      document.getElementById(
-        'users'
-      ).innerHTML =
-        '<tr><td colspan="6">' +
-        esc(e.message) +
-        '</td></tr>';
-
+        return;
     }
 
-
-  } catch (e) {
-
-    document.getElementById(
-      'serverState'
-    ).textContent =
-      '● Server read failed';
-
-
-    document.getElementById(
-      'users'
-    ).innerHTML =
-      '<tr><td colspan="6">' +
-      esc(e.message) +
-      '</td></tr>';
-
-  }
-
-}
-
-
-/* =========================================================
-   RENDER USERS
-   ========================================================= */
-
-function renderUsers(list) {
-
-  document.getElementById(
-    'users'
-  ).innerHTML =
-
-    list.length
-
-      ? list.map(u => `
-
-        <tr>
-
-          <td>
-            ${esc(u.userId)}
-          </td>
-
-          <td>
-            ${esc(u.lastSeen)}
-          </td>
-
-          <td>
-
-            <span class="pill ${
-              u.typing ? '' : 'warn'
-            }">
-
-              ${
-                u.typing
-                ? 'TRUE'
-                : 'FALSE'
-              }
-
-            </span>
-
-          </td>
-
-          <td>
-            ${esc(u.language)}
-          </td>
-
-          <td>
-            ${esc(u.wpm ?? '—')}
-          </td>
-
-          <td>
-            ${esc(u.version)}
-          </td>
-
-        </tr>
-
-      `).join('')
-
-      :
-
-      '<tr><td colspan="6">No active users.</td></tr>';
-
-}
-
-
-/* =========================================================
-   LOAD CONFIG
-   ========================================================= */
-
-async function loadConfig() {
-
-  try {
-
-    const d =
-      await get('?action=config');
-
-
-    document.getElementById(
-      'appVersion'
-    ).textContent =
-      d.appVersion ||
-      d.version ||
-      '—';
-
-
-    document.getElementById(
-      'announcement'
-    ).textContent =
-      d.information ||
-      d.announcement ||
-      d.message ||
-      'No announcement.';
-
-
-    document.getElementById(
-      'serverState'
-    ).textContent =
-
-      '● Server online' +
-
-      (
-        d.maintenanceMode ??
-        d.MaintenanceMode
-      )
-
-      ? ' · MAINTENANCE'
-      : '';
-
-
-    document.getElementById(
-      'announcementInput'
-    ).value =
-      d.information ||
-      d.announcement ||
-      d.message ||
-      '';
-
-
-    document.getElementById(
-      'versionInput'
-    ).value =
-      d.appVersion ||
-      d.version ||
-      '';
-
-
-    document.getElementById(
-      'thresholdInput'
-    ).value =
-
-      d.onlineThresholdMinutes ??
-      d.onlineMinutes ??
-      d.threshold ??
-      2;
-
-
-    if (
-      d.downloadCount != null
-    ) {
-
-      document.getElementById(
-        'downloadCount'
-      ).textContent =
-        d.downloadCount;
-
-    }
-
-
-  } catch (e) {
-
-    document.getElementById(
-      'announcement'
-    ).textContent =
-      'Config read failed: ' +
-      e.message;
-
-  }
-
-}
-
-
-/* =========================================================
-   LOAD LICENSES
-   ========================================================= */
-
-async function loadLicenses(
-  askForToken = false
-) {
-
-  try {
-
-    const d =
-      await adminRead(
-        'licenses',
-        askForToken
-      );
-
-
-    const rows =
-      d.licenses ||
-      d.data?.licenses ||
-      [];
-
-
-    const active =
-      rows.filter(x =>
-        String(
-          x.status || ''
-        ).toLowerCase() ===
-        'active'
-      ).length;
-
-
-    document.getElementById(
-      'activeLicenses'
-    ).textContent =
-      active;
-
-
-    document.getElementById(
-      'licenses'
-    ).innerHTML =
-
-      rows.length
-
-        ? rows.map(x => `
-
-          <tr>
-
-            <td>
-              ${esc(x.licenseKey)}
-            </td>
-
-            <td>
-              ${esc(x.status)}
-            </td>
-
-            <td>
-              ${esc(x.userId)}
-            </td>
-
-            <td>
-              ${esc(
-                x.createdDate || '—'
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                x.expiryDate || '—'
-              )}
-            </td>
-
-          </tr>
-
-        `).join('')
-
-        :
-
-        '<tr><td colspan="5">No licenses returned.</td></tr>';
-
-
-  } catch (e) {
-
-    document.getElementById(
-      'activeLicenses'
-    ).textContent =
-      '—';
-
-
-    document.getElementById(
-      'licenses'
-    ).innerHTML =
-      '<tr><td colspan="5">' +
-      esc(e.message) +
-      '</td></tr>';
-
-  }
-
-}
-
-
-/* =========================================================
-   LOAD DOWNLOADS
-   ========================================================= */
-
-async function loadDownloads(
-  askForToken = false
-) {
-
-  try {
-
-    const d =
-      await adminRead(
-        'downloads',
-        askForToken
-      );
-
-
-    const rows =
-      d.downloads ||
-      d.data?.downloads ||
-      [];
-
-
-    document.getElementById(
-      'downloads'
-    ).innerHTML =
-
-      rows.length
-
-        ? rows.map(x => `
-
-          <tr>
-
-            <td>
-              ${esc(
-                x.timestamp ||
-                x.time ||
-                '—'
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                x.version ||
-                '—'
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                x.event ||
-                x.details ||
-                x.source ||
-                '—'
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                x.userId ||
-                '—'
-              )}
-            </td>
-
-          </tr>
-
-        `).join('')
-
-        :
-
-        '<tr><td colspan="4">No downloads recorded.</td></tr>';
-
-
-  } catch (e) {
-
-    document.getElementById(
-      'downloads'
-    ).innerHTML =
-      '<tr><td colspan="4">' +
-      esc(e.message) +
-      '</td></tr>';
-
-  }
-
-}
-
-
-/* =========================================================
-   TEST CONNECTION
-   ========================================================= */
-
-async function testConnection() {
-
-  const result =
-    document.getElementById(
-      'adminResult'
+    sessionStorage.setItem("TW_ADMIN_KEY",key);
+
+    showMessage(
+        "authMessage",
+        "Admin key saved in this browser session.",
+        "ok"
     );
 
-  const state =
-    document.getElementById(
-      'serverState'
+    loadLicenses();
+    loadDownloads();
+    loadUsers();
+
+}
+
+
+function clearAdminKey(){
+
+    sessionStorage.removeItem("TW_ADMIN_KEY");
+
+    document.getElementById("adminKey").value = "";
+
+    showMessage(
+        "authMessage",
+        "Admin key cleared.",
+        "ok"
     );
 
-
-  state.textContent =
-    '● Testing server...';
-
-  result.textContent =
-    'Connecting to Google Apps Script...';
+}
 
 
-  try {
+function showMessage(id,text,type){
 
-    const d =
-      await get('?action=health');
+    const el = document.getElementById(id);
 
+    if(!el) return;
 
-    if (
-      !d.ok &&
-      !d.success
-    ) {
+    el.textContent = text;
 
-      throw new Error(
-        d.error ||
-        'Health check failed'
-      );
+    el.className =
+        "message show " +
+        (type || "ok");
 
-    }
+}
 
 
-    state.textContent =
-      '● Server online · ' +
-      (
-        d.service ||
-        'Typing Watch'
-      );
+function setStatus(text,type){
 
+    const el = document.getElementById("status");
 
-    result.textContent =
-      'Server health check passed at ' +
-      (
-        d.serverTime ||
-        d.time ||
-        new Date().toISOString()
-      );
+    el.textContent = "● " + text;
 
-
-  } catch (e) {
-
-    state.textContent =
-      '● Server connection failed';
-
-
-    result.textContent =
-      'Connection test failed: ' +
-      e.message;
-
-  }
+    el.className =
+        "status " +
+        (type || "wait");
 
 }
 
 
 /* =========================================================
-   TOGGLE MAINTENANCE
+   PUBLIC API
    ========================================================= */
 
-async function toggleMaintenance() {
+async function loadStats(){
 
-  try {
+    try{
 
-    const d =
-      await get('?action=config');
+        const data = await jsonp({
+            action:"stats"
+        });
+
+        if(!data || data.success === false){
+            throw new Error(
+                data && data.error
+                ? data.error
+                : "Stats failed"
+            );
+        }
+
+        document.getElementById("liveUsers").textContent =
+            data.liveUsers ?? data.onlineUsers ?? 0;
+
+        document.getElementById("typingNow").textContent =
+            data.typingNow ?? 0;
+
+        document.getElementById("downloadsCount").textContent =
+            data.downloadCount ?? 0;
+
+        document.getElementById("activeLicenses").textContent =
+            data.activeLicenses ??
+            data.activeLicenseCount ??
+            "—";
+
+        return data;
+
+    }catch(err){
+
+        document.getElementById("liveUsers").textContent = "—";
+        document.getElementById("typingNow").textContent = "—";
+
+        throw err;
+    }
+
+}
 
 
-    const current =
-      (
-        d.maintenanceMode ??
-        d.MaintenanceMode
-      ) === true;
+/* =========================================================
+   CONFIG
+   ========================================================= */
+
+async function loadConfig(){
+
+    try{
+
+        const data = await jsonp({
+            action:"config"
+        });
+
+        if(!data || data.success === false){
+            throw new Error(
+                data && data.error
+                ? data.error
+                : "Config failed"
+            );
+        }
+
+        const c = data.config || data;
+
+        document.getElementById("appVersion").textContent =
+            c.version ||
+            c.appVersion ||
+            c.AppVersion ||
+            "—";
+
+        document.getElementById("version").value =
+            c.version ||
+            c.appVersion ||
+            c.AppVersion ||
+            "";
+
+        document.getElementById("minimumVersion").value =
+            c.minimumVersion || "";
+
+        document.getElementById("targetHours").value =
+            c.targetHours ?? "";
+
+        document.getElementById("onlineMinutes").value =
+            c.onlineMinutes ??
+            c.threshold ??
+            "";
+
+        document.getElementById("wpm").value =
+            c.WPM ??
+            c.wpm ??
+            "";
+
+        document.getElementById("downloadURL").value =
+            c.downloadURL ||
+            "";
+
+        document.getElementById("announcement").value =
+            c.announcement ||
+            c.message ||
+            c.information ||
+            "";
+
+        return data;
+
+    }catch(err){
+
+        throw err;
+    }
+
+}
 
 
-    await adminOp(
-      'maintenance',
-      {
-        enabled:!current
-      }
+/* =========================================================
+   ADMIN GET
+   ========================================================= */
+
+async function adminGet(op,extra={}){
+
+    const token = getAdminKey();
+
+    if(!token){
+        throw new Error("Admin key required");
+    }
+
+    return await jsonp({
+
+        action:"admin",
+
+        op:op,
+
+        adminKey:token,
+
+        token:token,
+
+        ...extra
+
+    });
+
+}
+
+
+/* =========================================================
+   LIVE USERS
+   ========================================================= */
+
+async function loadUsers(){
+
+    const body =
+        document.getElementById("usersBody");
+
+    try{
+
+        const data =
+            await adminGet("users");
+
+        if(data.success === false){
+            throw new Error(data.error || "Users failed");
+        }
+
+        const users =
+            data.users ||
+            data.liveUsers ||
+            data.data ||
+            [];
+
+        if(!Array.isArray(users) || users.length === 0){
+
+            body.innerHTML =
+                '<tr><td colspan="7">No live users</td></tr>';
+
+            return;
+        }
+
+        body.innerHTML =
+            users.map(u=>{
+
+                const typing =
+                    u.typing === true ||
+                    u.typing === "true";
+
+                return `
+                <tr>
+                    <td>${escapeHtml(u.userId || u.UserID || "—")}</td>
+
+                    <td>
+                        <span class="badge online">
+                            ONLINE
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="badge ${typing ? "active":"inactive"}">
+                            ${typing ? "YES":"NO"}
+                        </span>
+                    </td>
+
+                    <td>${escapeHtml(u.language || "—")}</td>
+
+                    <td>${escapeHtml(u.version || "—")}</td>
+
+                    <td>${escapeHtml(u.lastSeen || "—")}</td>
+
+                    <td>${escapeHtml(u.licenseKey || "—")}</td>
+                </tr>
+                `;
+
+            }).join("");
+
+    }catch(err){
+
+        body.innerHTML =
+            `<tr>
+                <td colspan="7">
+                    ${escapeHtml(err.message)}
+                </td>
+            </tr>`;
+
+    }
+
+}
+
+
+/* =========================================================
+   LICENSES
+   ========================================================= */
+
+async function loadLicenses(){
+
+    const body =
+        document.getElementById("licensesBody");
+
+    try{
+
+        const data =
+            await adminGet("licenses");
+
+        if(data.success === false){
+            throw new Error(data.error || "Licenses failed");
+        }
+
+        const rows =
+            data.licenses ||
+            data.data ||
+            [];
+
+        if(!Array.isArray(rows) || rows.length === 0){
+
+            body.innerHTML =
+                '<tr><td colspan="7">No licenses found</td></tr>';
+
+            return;
+        }
+
+        body.innerHTML =
+            rows.map(x=>{
+
+                const status =
+                    x.status ||
+                    x.Status ||
+                    "";
+
+                return `
+                <tr>
+                    <td>${escapeHtml(x.licenseKey || x.LicenseKey || "—")}</td>
+                    <td>${escapeHtml(x.userId || x.UserID || "—")}</td>
+                    <td>
+                        <span class="badge ${
+                            String(status).toLowerCase() === "active"
+                            ? "active"
+                            : "inactive"
+                        }">
+                            ${escapeHtml(status || "—")}
+                        </span>
+                    </td>
+                    <td>${escapeHtml(x.planType || x.PlanType || "—")}</td>
+                    <td>${escapeHtml(x.expiryDate || x.ExpiryDate || "—")}</td>
+                    <td>${escapeHtml(x.createdDate || x.CreatedDate || "—")}</td>
+                    <td>${escapeHtml(x.notes || x.Notes || "—")}</td>
+                </tr>
+                `;
+
+            }).join("");
+
+    }catch(err){
+
+        body.innerHTML =
+            `<tr>
+                <td colspan="7">
+                    ${escapeHtml(err.message)}
+                </td>
+            </tr>`;
+
+    }
+
+}
+
+
+/* =========================================================
+   DOWNLOADS
+   ========================================================= */
+
+async function loadDownloads(){
+
+    const body =
+        document.getElementById("downloadsBody");
+
+    try{
+
+        const data =
+            await adminGet("downloads");
+
+        if(data.success === false){
+            throw new Error(data.error || "Downloads failed");
+        }
+
+        const rows =
+            data.downloads ||
+            data.data ||
+            [];
+
+        if(!Array.isArray(rows) || rows.length === 0){
+
+            body.innerHTML =
+                '<tr><td colspan="5">No download events</td></tr>';
+
+            return;
+        }
+
+        body.innerHTML =
+            rows.map(x=>{
+
+                return `
+                <tr>
+                    <td>${escapeHtml(x.timestamp || "—")}</td>
+                    <td>${escapeHtml(x.userId || x.UserID || "—")}</td>
+                    <td>${escapeHtml(x.version || "—")}</td>
+                    <td>${escapeHtml(x.event || "—")}</td>
+                    <td>${escapeHtml(x.details || "—")}</td>
+                </tr>
+                `;
+
+            }).join("");
+
+    }catch(err){
+
+        body.innerHTML =
+            `<tr>
+                <td colspan="5">
+                    ${escapeHtml(err.message)}
+                </td>
+            </tr>`;
+
+    }
+
+}
+
+
+/* =========================================================
+   CONNECTION TEST
+   ========================================================= */
+
+async function testConnection(){
+
+    setStatus("Testing connection...","wait");
+
+    try{
+
+        const data =
+            await jsonp({
+                action:"health"
+            });
+
+        if(!data || data.success === false){
+            throw new Error(
+                data && data.error
+                ? data.error
+                : "Health check failed"
+            );
+        }
+
+        setStatus("Backend connection OK","ok");
+
+        showMessage(
+            "connectionMessage",
+            "Backend connection OK",
+            "ok"
+        );
+
+        return true;
+
+    }catch(err){
+
+        setStatus(
+            "Connection failed: " + err.message,
+            "error"
+        );
+
+        showMessage(
+            "connectionMessage",
+            "Connection test failed: " + err.message,
+            "error"
+        );
+
+        return false;
+
+    }
+
+}
+
+
+/* =========================================================
+   ANNOUNCEMENT
+   ========================================================= */
+
+async function saveAnnouncement(){
+
+    const message =
+        document.getElementById("announcement").value;
+
+    try{
+
+        const data =
+            await adminGet(
+                "announcement",
+                {
+                    value:message,
+                    message:message
+                }
+            );
+
+        if(data.success === false){
+            throw new Error(data.error || "Announcement failed");
+        }
+
+        showMessage(
+            "announcementMessage",
+            "Announcement saved successfully.",
+            "ok"
+        );
+
+    }catch(err){
+
+        showMessage(
+            "announcementMessage",
+            err.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+async function clearAnnouncement(){
+
+    document.getElementById("announcement").value = "";
+
+    await saveAnnouncement();
+
+}
+
+
+/* =========================================================
+   APP CONTROLS
+   ========================================================= */
+
+async function saveVersion(){
+
+    const value =
+        document.getElementById("version").value.trim();
+
+    await saveConfigValue(
+        "version",
+        value
     );
 
-
-  } catch (e) {
-
-    document.getElementById(
-      'adminResult'
-    ).textContent =
-      'Maintenance change failed: ' +
-      e.message;
-
-  }
-
 }
 
 
-/* =========================================================
-   ADMIN OPERATION
-   ========================================================= */
+async function saveMinimumVersion(){
 
-async function adminOp(
-  op,
-  extra
-) {
+    const value =
+        document.getElementById("minimumVersion").value.trim();
 
-  const t =
-    token(true);
-
-
-  if (!t) {
-
-    document.getElementById(
-      'adminResult'
-    ).textContent =
-      'Cancelled. Admin token was not entered.';
-
-    return;
-
-  }
-
-
-  document.getElementById(
-    'adminResult'
-  ).textContent =
-    'Saving…';
-
-
-  try {
-
-    const d =
-      await post(
-
-        Object.assign(
-
-          {
-            action:'admin',
-            token:t,
-            op:op
-          },
-
-          extra || {}
-
-        )
-
-      );
-
-
-    document.getElementById(
-      'adminResult'
-    ).textContent =
-      d.message ||
-      'Request completed successfully.';
-
-
-    await refreshAll(false);
-
-
-  } catch (e) {
-
-    document.getElementById(
-      'adminResult'
-    ).textContent =
-      'Save failed: ' +
-      e.message;
-
-  }
-
-}
-
-
-/* =========================================================
-   SAVE ANNOUNCEMENT
-   ========================================================= */
-
-function setAnnouncement() {
-
-  adminOp(
-    'announcement',
-    {
-      text:
-        document.getElementById(
-          'announcementInput'
-        ).value
-    }
-  );
-
-}
-
-
-/* =========================================================
-   SAVE VERSION
-   ========================================================= */
-
-function setVersion() {
-
-  adminOp(
-    'version',
-    {
-      version:
-        document.getElementById(
-          'versionInput'
-        ).value.trim()
-    }
-  );
-
-}
-
-
-/* =========================================================
-   SAVE THRESHOLD
-   ========================================================= */
-
-function setThreshold() {
-
-  const minutes =
-    Number(
-      document.getElementById(
-        'thresholdInput'
-      ).value
+    await saveConfigValue(
+        "minimumVersion",
+        value
     );
 
-
-  if (
-    !Number.isInteger(minutes) ||
-    minutes < 1 ||
-    minutes > 1440
-  ) {
-
-    document.getElementById(
-      'adminResult'
-    ).textContent =
-      'Threshold must be a whole number from 1 to 1440 minutes.';
-
-    return;
-
-  }
+}
 
 
-  adminOp(
-    'threshold',
-    {
-      minutes:minutes
+async function saveTargetHours(){
+
+    const value =
+        document.getElementById("targetHours").value;
+
+    await saveConfigValue(
+        "targetHours",
+        value
+    );
+
+}
+
+
+async function saveOnlineMinutes(){
+
+    const value =
+        document.getElementById("onlineMinutes").value;
+
+    await saveConfigValue(
+        "onlineMinutes",
+        value
+    );
+
+}
+
+
+async function saveWPM(){
+
+    const value =
+        document.getElementById("wpm").value;
+
+    await saveConfigValue(
+        "WPM",
+        value
+    );
+
+}
+
+
+async function saveDownloadURL(){
+
+    const value =
+        document.getElementById("downloadURL").value.trim();
+
+    await saveConfigValue(
+        "downloadURL",
+        value
+    );
+
+}
+
+
+async function saveConfigValue(key,value){
+
+    try{
+
+        const data =
+            await adminGet(
+                "config",
+                {
+                    key:key,
+                    value:value
+                }
+            );
+
+        if(data.success === false){
+            throw new Error(data.error || "Save failed");
+        }
+
+        showMessage(
+            "controlMessage",
+            key + " saved successfully.",
+            "ok"
+        );
+
+        await loadConfig();
+
+    }catch(err){
+
+        showMessage(
+            "controlMessage",
+            err.message,
+            "error"
+        );
+
     }
-  );
 
 }
 
 
 /* =========================================================
-   ADD LICENSE
+   MAINTENANCE
    ========================================================= */
 
-function addLicense() {
+async function enableMaintenance(){
 
-  const key =
-    document.getElementById(
-      'licenseKey'
-    ).value.trim();
+    await maintenance(true);
 
-
-  if (!key) {
-
-    document.getElementById(
-      'adminResult'
-    ).textContent =
-      'Please enter a license key.';
-
-    return;
-
-  }
+}
 
 
-  adminOp(
+async function disableMaintenance(){
 
-    'license',
+    await maintenance(false);
 
-    {
+}
 
-      key:key,
 
-      status:'Active',
+async function maintenance(enabled){
 
-      userId:
-        document.getElementById(
-          'licenseUser'
-        ).value.trim(),
+    try{
 
-      expiry:
-        document.getElementById(
-          'licenseExpiry'
-        ).value.trim()
+        const data =
+            await adminGet(
+                "maintenance",
+                {
+                    value:enabled ? "true":"false",
+                    enabled:enabled ? "true":"false"
+                }
+            );
+
+        if(data.success === false){
+            throw new Error(data.error || "Maintenance update failed");
+        }
+
+        showMessage(
+            "controlMessage",
+            enabled
+            ? "Maintenance mode ENABLED."
+            : "Maintenance mode DISABLED.",
+            "ok"
+        );
+
+        await loadConfig();
+
+    }catch(err){
+
+        showMessage(
+            "controlMessage",
+            err.message,
+            "error"
+        );
 
     }
 
-  );
+}
+
+
+/* =========================================================
+   CREATE LICENSE
+   ========================================================= */
+
+async function createLicense(){
+
+    const licenseKey =
+        document.getElementById("newLicenseKey").value.trim();
+
+    const userId =
+        document.getElementById("newUserId").value.trim();
+
+    const planType =
+        document.getElementById("newPlanType").value.trim();
+
+    const expiryDate =
+        document.getElementById("newExpiryDate").value;
+
+    const notes =
+        document.getElementById("newNotes").value.trim();
+
+
+    if(!licenseKey){
+
+        showMessage(
+            "licenseMessage",
+            "License Key required.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    try{
+
+        const data =
+            await adminGet(
+                "license",
+                {
+                    licenseKey:licenseKey,
+                    userId:userId,
+                    planType:planType,
+                    expiryDate:expiryDate,
+                    notes:notes
+                }
+            );
+
+        if(data.success === false){
+            throw new Error(data.error || "License creation failed");
+        }
+
+        showMessage(
+            "licenseMessage",
+            "License created successfully.",
+            "ok"
+        );
+
+        document.getElementById("newLicenseKey").value = "";
+        document.getElementById("newUserId").value = "";
+        document.getElementById("newNotes").value = "";
+
+        loadLicenses();
+
+    }catch(err){
+
+        showMessage(
+            "licenseMessage",
+            err.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   SEARCH CUSTOMER
+   ========================================================= */
+
+async function searchCustomer(){
+
+    const q =
+        document.getElementById("searchText").value.trim();
+
+    if(!q){
+
+        document.getElementById("searchResult").innerHTML =
+            '<div class="message show error">Enter User ID or License Key.</div>';
+
+        return;
+    }
+
+
+    try{
+
+        const data =
+            await adminGet(
+                "search_customer",
+                {
+                    query:q,
+                    q:q,
+                    search:q
+                }
+            );
+
+        if(data.success === false){
+            throw new Error(data.error || "Search failed");
+        }
+
+        document.getElementById("searchResult").innerHTML =
+            `<div class="connection">
+                <pre style="white-space:pre-wrap">${escapeHtml(
+                    JSON.stringify(data,null,2)
+                )}</pre>
+            </div>`;
+
+    }catch(err){
+
+        document.getElementById("searchResult").innerHTML =
+            `<div class="message show error">
+                ${escapeHtml(err.message)}
+            </div>`;
+
+    }
 
 }
 
@@ -1572,40 +1478,76 @@ function addLicense() {
    REFRESH ALL
    ========================================================= */
 
-async function refreshAll(
-  askForToken = false
-) {
+async function refreshAll(showResult=false){
 
-  document.getElementById(
-    'lastUpdate'
-  ).textContent =
-    'Refreshing…';
+    setStatus("Connecting...","wait");
+
+    try{
+
+        await testConnection();
+
+        await Promise.all([
+            loadStats(),
+            loadConfig()
+        ]);
+
+        const key = getAdminKey();
+
+        if(key){
+
+            await Promise.all([
+                loadUsers(),
+                loadLicenses(),
+                loadDownloads()
+            ]);
+
+        }else{
+
+            document.getElementById("usersBody").innerHTML =
+                '<tr><td colspan="7">Enter ADMIN_KEY to view live users.</td></tr>';
+
+        }
+
+        setStatus(
+            "Server connected • Last refresh: " +
+            new Date().toLocaleTimeString(),
+            "ok"
+        );
+
+    }catch(err){
+
+        setStatus(
+            "Server read failed",
+            "error"
+        );
+
+        if(showResult){
+
+            showMessage(
+                "connectionMessage",
+                err.message,
+                "error"
+            );
+
+        }
+
+    }
+
+}
 
 
-  await Promise.all([
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
 
-    loadStats(
-      askForToken
-    ),
+function escapeHtml(value){
 
-    loadConfig(),
-
-    loadLicenses(
-      askForToken
-    ),
-
-    loadDownloads(
-      askForToken
-    )
-
-  ]);
-
-
-  document.getElementById(
-    'lastUpdate'
-  ).textContent =
-    'Updated ' +
-    new Date().toLocaleString();
+    return String(value ?? "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
 
 }
 
@@ -1614,17 +1556,26 @@ async function refreshAll(
    START
    ========================================================= */
 
-refreshAll(false);
+window.addEventListener("load",()=>{
 
+    const saved =
+        sessionStorage.getItem("TW_ADMIN_KEY");
 
-/* =========================================================
-   AUTO REFRESH EVERY 10 SECONDS
-   ========================================================= */
+    if(saved){
 
-setInterval(
-  () => refreshAll(false),
-  10000
-);
+        document.getElementById("adminKey").value =
+            saved;
+
+    }
+
+    refreshAll(true);
+
+    setInterval(
+        ()=>refreshAll(false),
+        10000
+    );
+
+});
 
 </script>
 
