@@ -10,6 +10,7 @@ using System.Threading;
 using FormsTimer = System.Windows.Forms.Timer;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 class TypingWatch : Form
 {
@@ -68,6 +69,7 @@ class TypingWatch : Form
     {
         folder=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"TypingWatch");
         Directory.CreateDirectory(folder);
+        ConfigureAutoStart();
         totalFile=Path.Combine(folder,"total.dat");
         dayFile=Path.Combine(folder,"today.dat");
         settingsFile=Path.Combine(folder,"wpm-settings.dat");
@@ -195,6 +197,23 @@ class TypingWatch : Form
         FormClosing+=(s,e)=>{SaveData();if(hook!=IntPtr.Zero)UnhookWindowsHookEx(hook);};
         BeginInvoke((MethodInvoker)delegate { StartOnlineSync(); CheckForUpdates(false); });
         UpdateWatch();
+    }
+
+    void ConfigureAutoStart()
+    {
+        // Per-user startup entry: no administrator rights required; compatible with Windows 7+.
+        try
+        {
+            string exe=Application.ExecutablePath;
+            using(RegistryKey key=Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run",true))
+            {
+                if(key!=null) key.SetValue("TypingWatch", "\\\""+exe+"\\\"");
+            }
+        }
+        catch
+        {
+            // Keep the tracker usable even if the system blocks startup registration.
+        }
     }
 
     void OpenChat()
