@@ -626,6 +626,17 @@ class TypingWatch : Form
     void UpdateWatch()
     {
         DateTime now=DateTime.Now;
+        // Reset the daily counters at local midnight even if the app stays open.
+        string todayKey=now.ToString("yyyy-MM-dd");
+        if(todayKey!=date)
+        {
+            try { SaveData(); } catch { }
+            date=todayKey;
+            hindiToday=TimeSpan.Zero;
+            englishToday=TimeSpan.Zero;
+            today=TimeSpan.Zero;
+            try { SaveData(); } catch { }
+        }
         if(trialExpired && !IsLicenseValid(ReadLicense()))
         {
             meter.Wpm=0;
