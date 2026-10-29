@@ -635,14 +635,14 @@ class TypingWatch : Form
         licenseStatusLabel.Text=licensed?"LICENSE: ACTIVE":(trialExpired?"TRIAL EXPIRED":"FREE TRIAL");
         licenseStatusLabel.ForeColor=licensed?Color.DarkGreen:(trialExpired?Color.Red:Color.DarkOrange);
 
-        TimeSpan remaining=TimeSpan.FromHours(100)-total;
+        TimeSpan remaining=TimeSpan.FromHours(50)-total;
         if(remaining<TimeSpan.Zero) remaining=TimeSpan.Zero;
         label.Text="⌨ TYPING WATCH\r\n\r\n"+
             "Total: "+Format(total)+"\r\n"+
             "Today: "+Format(today)+"\r\n"+
             "Hindi: "+Format(hindiTotal)+"\r\n"+
             "English: "+Format(englishTotal)+"\r\n"+
-            "Remaining (100h): "+Format(remaining)+"\r\n\r\n"+
+            "Remaining (50h): "+Format(remaining)+"\r\n\r\n"+
             "WPM: "+((int)Math.Round(displayedWpm))+"\r\n"+
             "Keyboard: "+(active?"ACTIVE":"PAUSED (5s)")+"\r\n"+
             "Hook: "+(hook!=IntPtr.Zero?"OK":"RETRYING")+"\r\n"+
