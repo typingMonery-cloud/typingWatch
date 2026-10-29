@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Typing Watch Admin</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef4f7;color:#13212b}.top{background:#16324f;color:#fff;padding:18px 22px}.topin{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:15px}.top h1{margin:0;font-size:24px}.top small{opacity:.75}.wrap{max-width:1200px;margin:auto;padding:20px}.bar{background:#fff;border:1px solid #d6e0e6;border-radius:14px;padding:14px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;background:#16324f;color:#fff}.btn.alt{background:#2b6f77}.status{margin-left:auto;font-size:13px;color:#647783}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:#fff;border:1px solid #d6e0e6;border-radius:14px;padding:17px}.label{font-size:12px;color:#647783}.num{font-size:29px;font-weight:800;margin-top:8px}.section{background:#fff;border:1px solid #d6e0e6;border-radius:14px;margin-top:16px;padding:18px}.section h2{font-size:18px;margin:0 0 12px}.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:760px}.table th,.table td{padding:10px;border-bottom:1px solid #e4ebef;text-align:left;font-size:13px}.table th{background:#f5f8fa}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#e7f5ea;color:#23743a;font-weight:700;font-size:11px}.warn{background:#fff4dc;color:#8a5b00}.box{padding:12px;background:#f5f8fa;border-radius:10px;font-size:13px;line-height:1.55}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:850px){.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}@media(max-width:480px){.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div><h1>Typing Watch Admin</h1><small>Live control & monitoring panel</small></div><div id="serverState">● Checking server...</div></div></header>
+<main class="wrap">
+<div class="bar"><button class="btn" onclick="refreshAll()">↻ Refresh</button><button class="btn alt" onclick="loadConfig()">📢 Refresh Announcement</button><span class="status" id="lastUpdate">Not loaded</span></div>
+<section class="cards">
+<div class="card"><div class="label">LIVE USERS</div><div class="num" id="liveUsers">—</div></div>
+<div class="card"><div class="label">TYPING NOW</div><div class="num" id="typingNow">—</div></div>
+<div class="card"><div class="label">APP VERSION</div><div class="num" id="appVersion">—</div></div>
+<div class="card"><div class="label">SERVER</div><div class="num" id="serverOk">—</div></div>
+</section>
+<section class="section"><h2>Live Users</h2><div class="tablewrap"><table class="table"><thead><tr><th>User ID</th><th>Last Seen</th><th>Typing</th><th>Language</th><th>WPM</th><th>Version</th></tr></thead><tbody id="users"><tr><td colspan="6">Loading…</td></tr></tbody></table></div></section>
+<section class="grid2">
+<div class="section"><h2>Announcement</h2><div class="box" id="announcement">Loading…</div></div>
+<div class="section"><h2>Connection</h2><div class="box">Backend: Google Apps Script<br>Heartbeat: Typing Watch → server<br>Stats endpoint: <code>?action=stats</code><br>Config endpoint: <code>?action=config</code></div></div>
+</section>
+<section class="section"><h2>Admin Notes</h2><div class="box">This panel reads the configured live server. License management, download counters and server-side announcement editing must be implemented in the backend before they can be shown or changed here. No fake values are displayed.</div></section>
+</main>
+<script>
+const API='https://script.google.com/macros/s/AKfycbxqCie36dJeZXBTRDsFMDhFYE0vZHnhXFdH1laGqTLScO-IPTlqZJ9IOotb91oJfR2QUA/exec';
+function esc(v){return String(v==null?'':v).replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));}
+async function get(path){const r=await fetch(API+path,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}
+async function loadStats(){try{const d=await get('?action=stats');document.getElementById('liveUsers').textContent=d.liveUsers??'—';document.getElementById('typingNow').textContent=d.typingNow??'—';document.getElementById('serverOk').textContent='ONLINE';document.getElementById('serverState').textContent='● Server online';const list=d.users||d.live||d.liveUsersList||[];const rows=Array.isArray(list)?list:[];document.getElementById('users').innerHTML=rows.length?rows.map(u=>`<tr><td>${esc(u.userId||u.UserID||u.id)}</td><td>${esc(u.lastSeen||u.LastSeen)}</td><td><span class="pill ${String(u.typing||u.Typing).toLowerCase()=='true'?'':'warn'}">${esc(u.typing||u.Typing||'FALSE')}</span></td><td>${esc(u.language||u.Language||'')}</td><td>${esc(u.wpm||u.WPM||'')}</td><td>${esc(u.version||u.Version||'')}</td></tr>`).join(''):'<tr><td colspan="6">No user list returned by stats endpoint.</td></tr>';}catch(e){document.getElementById('serverOk').textContent='ERROR';document.getElementById('serverState').textContent='● Server read failed';document.getElementById('users').innerHTML='<tr><td colspan="6">'+esc(e.message)+'</td></tr>';}}
+async function loadConfig(){try{const d=await get('?action=config');document.getElementById('appVersion').textContent=d.appVersion||d.version||'—';document.getElementById('announcement').textContent=d.information||d.announcement||'No announcement returned.';}catch(e){document.getElementById('announcement').textContent='Config read failed: '+e.message;}}
+async function refreshAll(){document.getElementById('lastUpdate').textContent='Refreshing…';await Promise.all([loadStats(),loadConfig()]);document.getElementById('lastUpdate').textContent='Updated '+new Date().toLocaleString();}
+refreshAll();setInterval(refreshAll,10000);
+</script>
+</body></html>
