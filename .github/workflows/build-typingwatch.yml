@@ -32,7 +32,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "C# compilation failed with exit code $LASTEXITCODE" }
           if (-not (Test-Path "$outDir\TypingWatch.exe")) { throw 'Compilation did not produce TypingWatch.exe.' }
 
-      - name: Runtime smoke test
+      - name: Runtime smoke test with diagnostics
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
@@ -40,17 +40,20 @@ jobs:
           $p = Start-Process -FilePath $exe -PassThru
           Start-Sleep -Seconds 8
           if ($p.HasExited) {
+            Write-Host "TypingWatch.exe exited during startup. ExitCode=$($p.ExitCode)"
+            Write-Host '===== STARTUP CRASH LOG ====='
             $crashLog = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'TypingWatch\startup-crash.log'
-            if (Test-Path $crashLog) {
-              Write-Host '===== STARTUP CRASH LOG ====='
-              Get-Content $crashLog
-              Write-Host '===== END STARTUP CRASH LOG ====='
-            }
+            if (Test-Path $crashLog) { Get-Content $crashLog | Write-Host } else { Write-Host 'startup-crash.log was not created.' }
+            Write-Host '===== .NET RUNTIME EVENTS ====='
+            Get-WinEvent -FilterHashtable @{LogName='Application'; ProviderName='.NET Runtime'; StartTime=(Get-Date).AddMinutes(-2)} -ErrorAction SilentlyContinue | Select-Object -First 10 TimeCreated,Id,Message | Format-List | Out-String -Width 500 | Write-Host
+            Write-Host '===== APPLICATION ERROR EVENTS ====='
+            Get-WinEvent -FilterHashtable @{LogName='Application'; ProviderName='Application Error'; StartTime=(Get-Date).AddMinutes(-2)} -ErrorAction SilentlyContinue | Select-Object -First 10 TimeCreated,Id,Message | Format-List | Out-String -Width 500 | Write-Host
             throw "TypingWatch.exe exited during startup smoke test. ExitCode=$($p.ExitCode)"
           }
           Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
 
       - name: Upload EXE artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: TypingWatch-Windows-EXE
