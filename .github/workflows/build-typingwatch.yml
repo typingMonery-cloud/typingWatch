@@ -23,6 +23,12 @@ jobs:
           $startup = Join-Path $env:GITHUB_WORKSPACE 'src/Startup.cs'
           $outDir = Join-Path $env:GITHUB_WORKSPACE 'dist'
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+          $code = Get-Content -Raw -Path $source
+          $old = '        BeginInvoke((MethodInvoker)delegate { StartOnlineSync(); CheckForUpdates(false); });'
+          $new = '        Shown += (s,e) => { StartOnlineSync(); CheckForUpdates(false); };'
+          if (-not $code.Contains($old)) { throw 'Expected startup BeginInvoke line was not found.' }
+          $code = $code.Replace($old,$new)
+          Set-Content -Path $source -Value $code -Encoding UTF8
           $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
           if (-not (Test-Path $compiler)) {
             $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe'
