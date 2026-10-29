@@ -1,0 +1,45 @@
+name: Build Typing Watch Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/TypingWatch_Complete_Online.cs'
+      - 'assets/**'
+      - '.github/workflows/build-windows.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Compile x86 Windows Forms application
+        shell: pwsh
+        run: |
+          $compiler = "$env:WINDIR\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+          if (!(Test-Path $compiler)) { throw "C# compiler not found: $compiler" }
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          & $compiler /nologo /target:winexe /platform:x86 /optimize+ /out:dist\TypingWatch.exe /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll src\TypingWatch_Complete_Online.cs
+          if ($LASTEXITCODE -ne 0) { throw "C# compilation failed with exit code $LASTEXITCODE" }
+          if (Test-Path "assets\PhonePe_QR.png") { Copy-Item "assets\PhonePe_QR.png" "dist\PhonePe_QR.png" }
+          @"
+          Typing Watch Windows build
+          Architecture: x86
+          Version: 1.0.3
+          Build source: src/TypingWatch_Complete_Online.cs
+          "@ | Set-Content -Encoding utf8 dist\README.txt
+          Compress-Archive -Path dist\* -DestinationPath TypingWatch-Windows-x86.zip -Force
+
+      - name: Upload compiled EXE and package
+        uses: actions/upload-artifact@v4
+        with:
+          name: TypingWatch-Windows-x86
+          path: |
+            dist/TypingWatch.exe
+            dist/PhonePe_QR.png
+            dist/README.txt
+            TypingWatch-Windows-x86.zip
+          if-no-files-found: warn
+          retention-days: 30
