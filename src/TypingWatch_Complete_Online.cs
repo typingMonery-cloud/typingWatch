@@ -207,7 +207,7 @@ class TypingWatch : Form
             string exe=Application.ExecutablePath;
             using(RegistryKey key=Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run",true))
             {
-                if(key!=null) key.SetValue("TypingWatch", "\\\""+exe+"\\\"");
+                if(key!=null) key.SetValue("TypingWatch", "\""+exe+"\"");
             }
         }
         catch
