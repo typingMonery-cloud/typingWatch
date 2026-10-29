@@ -1,0 +1,42 @@
+name: Package Original Working EXE
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'TypingWatch.exe'
+      - '.github/workflows/package-original-exe.yml'
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify original EXE exists
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (-not (Test-Path 'TypingWatch.exe')) { throw 'TypingWatch.exe was not found.' }
+          $item = Get-Item 'TypingWatch.exe'
+          if ($item.Length -le 0) { throw 'TypingWatch.exe is empty.' }
+          Write-Host ('Original EXE size: ' + $item.Length + ' bytes')
+          Write-Host ('SHA256: ' + (Get-FileHash 'TypingWatch.exe' -Algorithm SHA256).Hash)
+
+      - name: Prepare ZIP
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item 'TypingWatch.exe' 'dist\TypingWatch.exe' -Force
+          Compress-Archive -Path 'dist\TypingWatch.exe' -DestinationPath 'TypingWatch-Original-Working.zip' -Force
+
+      - name: Upload original EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: TypingWatch-Original-Working
+          path: |
+            TypingWatch.exe
+            TypingWatch-Original-Working.zip
+          if-no-files-found: error
