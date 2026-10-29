@@ -257,8 +257,8 @@ class TypingWatch : Form
         {
             if(File.Exists(trialFile) && DateTime.TryParse(File.ReadAllText(trialFile),null,System.Globalization.DateTimeStyles.RoundtripKind,out start))
             {
-                int left=Math.Max(0,(int)Math.Ceiling(5-(DateTime.Now-start).TotalDays));
-                if(left>0) return "License Status: FREE TRIAL\r\nTrial days remaining: "+left+" of 5 days";
+                int left=Math.Max(0,(int)Math.Ceiling(365-(DateTime.Now-start).TotalDays));
+                if(left>0) return "License Status: FREE TRIAL\r\nTrial days remaining: "+left+" of 365 days";
                 return "License Status: TRIAL EXPIRED\r\nActivate a license to unlock tracking.";
             }
         }
@@ -647,7 +647,7 @@ class TypingWatch : Form
             }
             DateTime start;
             if(DateTime.TryParse(File.Exists(trialFile)?File.ReadAllText(trialFile):"",null,System.Globalization.DateTimeStyles.RoundtripKind,out start))
-                trialExpired=(DateTime.Now-start).TotalDays>=5;
+                trialExpired=(DateTime.Now-start).TotalDays>=365;
         }
         else trialExpired=false;
 
