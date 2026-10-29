@@ -47,7 +47,7 @@ class TypingWatch : Form
     // ===== ONLINE FEATURES =====
     // Existing deployed Google Apps Script Web App for this project.
     const string OnlineServerUrl = "https://script.google.com/macros/s/AKfycbxqCie36dJeZXBTRDsFMDhFYE0vZHnhXFdH1laGqTLScO-IPTlqZJ9IOotb91oJfR2QUA/exec";
-    const string AppVersion = "1.0.0";
+    const string AppVersion = "1.0.3";
     const string UpdateOwner = "typingMonery-cloud";
     const string UpdateRepository = "typingWatch";
     bool updateCheckRunning=false;
@@ -152,7 +152,7 @@ class TypingWatch : Form
         Controls.Add(announcementLabel);
 
         onlineUsersLabel.SetBounds(ClientSize.Width-98, 3, 90, 17);
-        onlineUsersLabel.Anchor=AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;
+        onlineUsersLabel.Anchor=AnchorStyles.Top|AnchorStyles.Right;
         onlineUsersLabel.Font=new Font("Segoe UI",7,FontStyle.Bold);
         onlineUsersLabel.TextAlign=ContentAlignment.MiddleRight;
         onlineUsersLabel.Text="Online: --";
@@ -189,7 +189,7 @@ class TypingWatch : Form
             // Retry global hook installation if Windows rejected the first attempt.
             if(hook==IntPtr.Zero && (DateTime.Now-lastHookAttempt).TotalSeconds>=3) InstallKeyboardHook();
             UpdateWatch();
-            if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(30); SyncOnlineNow(); }
+            if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(5); SyncOnlineNow(); }
         };
         timer.Start();
         FormClosing+=(s,e)=>{SaveData();if(hook!=IntPtr.Zero)UnhookWindowsHookEx(hook);};
@@ -350,83 +350,39 @@ class TypingWatch : Form
             {
                 minWpm=f.MinimumWpm;
                 beepEnabled=f.BeepEnabled;
-                belowLimitSince=DateTime.MinValue;
                 SaveWarningSettings();
                 UpdateWatch();
             }
         }
     }
 
-    bool CheckTrialOrLicense()
+    bool IsLicenseValid(string key)
     {
-        string saved=ReadLicense();
-        if(IsLicenseValid(saved)) return true;
-        DateTime start;
-        try
+        if(String.IsNullOrWhiteSpace(key)) return false;
+        string[] p=key.Trim().Split('|');
+        if(p.Length<2) return false;
+        string email=p[0].Trim(); string expiry=p[1].Trim().ToUpperInvariant();
+        if(email.IndexOf('@')<1) return false;
+        if(expiry=="LIFETIME")
         {
-            if(!File.Exists(trialFile))
-            {
-                start=DateTime.Now;
-                File.WriteAllText(trialFile,start.ToString("o"));
-            }
-            else if(!DateTime.TryParse(File.ReadAllText(trialFile),null,System.Globalization.DateTimeStyles.RoundtripKind,out start))
-                start=DateTime.Now;
+            if(p.Length<3) return false;
+            string expected=MakePackageKeyHash(email,expiry,p[2].Trim(),p.Length>=4?p[3].Trim():"LIFETIME");
+            return p.Length>=5 && String.Equals(p[4].Trim(),expected,StringComparison.OrdinalIgnoreCase);
         }
-        catch { start=DateTime.Now; }
-        double days=(DateTime.Now-start).TotalDays;
-        if(days < 0) days=5; // basic rollback check
-        if(days < 5)
-        {
-            MessageBox.Show("TypingWatch 5 din ke free trial mein hai.\r\nBache hue din: "+Math.Max(0,(int)Math.Ceiling(5-days))+"\r\nLicense ke liye watch par right-click karke Enter License Key chunein.","TypingWatch Free Trial",MessageBoxButtons.OK,MessageBoxIcon.Information);
-            return true;
-        }
-        trialExpired=true;
-        MessageBox.Show("Aapka 5 din ka free trial khatam ho gaya hai. Watch khuli rahegi, lekin WPM meter aur typing-time tracking inactive rahenge. Features chalu karne ke liye Buy License par click karein ya right-click karke Enter License Key chunein.","TRIAL EXPIRED - LICENSE REQUIRED",MessageBoxButtons.OK,MessageBoxIcon.Warning);
-        return true;
+        DateTime d;
+        if(!DateTime.TryParseExact(expiry,"yyyyMMdd",System.Globalization.CultureInfo.InvariantCulture,System.Globalization.DateTimeStyles.None,out d)) return false;
+        if(d.Date<DateTime.Now.Date) return false;
+        if(p.Length<5) return false;
+        string expected2=MakePackageKeyHash(email,expiry,p[2].Trim(),p[3].Trim());
+        return String.Equals(p[4].Trim(),expected2,StringComparison.OrdinalIgnoreCase);
     }
 
     string ReadLicense()
     {
-        try { return File.Exists(licenseFile) ? File.ReadAllText(licenseFile).Trim() : ""; }
-        catch { return ""; }
+        try { return File.Exists(licenseFile)?File.ReadAllText(licenseFile).Trim():""; } catch { return ""; }
     }
 
-    bool IsLicenseValid(string key)
-    {
-        try
-        {
-            string[] p=key.Split('|');
-            if(p.Length!=3 && p.Length!=5) return false;
-            string email=p[0].Trim().ToLowerInvariant();
-            string expiry=p[1].Trim().ToUpperInvariant();
-            if(email.Length==0) return false;
-            if(expiry!="LIFETIME")
-            {
-                DateTime until;
-                if(!DateTime.TryParseExact(expiry,"yyyyMMdd",System.Globalization.CultureInfo.InvariantCulture,System.Globalization.DateTimeStyles.None,out until)) return false;
-                if(DateTime.Now.Date>until.Date) return false;
-            }
-            string expected;
-            string actual;
-            if(p.Length==5)
-            {
-                string package=p[2].Trim();
-                string planCode=p[3].Trim().ToUpperInvariant();
-                if(package.Length==0 || planCode.Length==0) return false;
-                expected=MakePackageKeyHash(email,expiry,package,planCode);
-                actual=p[4].Trim();
-            }
-            else
-            {
-                // Backward compatibility for existing keys generated by the earlier source.
-                expected=MakeKeyHash(email,expiry);
-                actual=p[2].Trim();
-            }
-            return String.Equals(expected,actual,StringComparison.OrdinalIgnoreCase);
-        } catch { return false; }
-    }
-
-    static string MakeKeyHash(string email,string expiry)
+    static string MakeLicenseHash(string email,string expiry)
     {
         using(SHA256 sha=SHA256.Create())
         {
@@ -480,7 +436,7 @@ class TypingWatch : Form
     {
         onlineUserId=GetOrCreateOnlineUserId();
         SyncOnlineNow();
-        nextOnlineSync=DateTime.Now.AddSeconds(30);
+        nextOnlineSync=DateTime.Now.AddSeconds(5);
     }
 
     string GetOrCreateOnlineUserId()
@@ -520,7 +476,7 @@ class TypingWatch : Form
                     wc.Headers[HttpRequestHeader.ContentType]="application/json; charset=utf-8";
                     bool typing=(DateTime.Now-lastKey).TotalSeconds<5;
                     string language=lastTypingLanguage==TypingLanguage.Hindi?"Hindi":(lastTypingLanguage==TypingLanguage.English?"English":"Unknown");
-                    string payload="{\"action\":\"heartbeat\",\"userId\":\""+onlineUserId+"\",\"typing\":\""+(typing?"true":"false")+"\",\"language\":\""+language+"\"}";
+                    string payload="{\"action\":\"heartbeat\",\"userId\":\""+onlineUserId+"\",\"typing\":\""+(typing?"true":"false")+"\",\"language\":\""+language+"\",\"wpm\":"+((int)Math.Round(displayedWpm))+",\"version\":\""+AppVersion+"\"}";
                     try { wc.UploadString(OnlineServerUrl,"POST",payload); } catch { }
                     try
                     {
@@ -556,7 +512,7 @@ class TypingWatch : Form
         if(updateCheckRunning) return;
         if(UpdateOwner=="YOUR-GITHUB-USERNAME")
         {
-            if(manual) MessageBox.Show("Auto-update check is ready. GitHub repository details are not connected yet.\\r\\n\\r\\nStep 2 mein repository URL set karna hoga.","Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Information);
+            if(manual) MessageBox.Show("Auto-update check is ready. GitHub repository details are not connected yet.\r\n\r\nStep 2 mein repository URL set karna hoga.","Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Information);
             return;
         }
         updateCheckRunning=true; updateButton.Enabled=false;
@@ -565,18 +521,19 @@ class TypingWatch : Form
             try
             {
                 ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;
-                string api="https://api.github.com/repos/"+UpdateOwner+"/"+UpdateRepository+"/releases/latest";
+                string api="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/version.json";
                 string json;
                 using(WebClient wc=new WebClient()) { wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch/"+AppVersion; json=wc.DownloadString(api); }
                 string tag=ExtractJsonValue(json,"tag_name");
-                string url=ExtractJsonValue(json,"html_url");
+                if(String.IsNullOrEmpty(tag)) tag=ExtractJsonValue(json,"version");
+                string url="https://github.com/"+UpdateOwner+"/"+UpdateRepository+"/releases";
                 bool newer=IsNewerVersion(tag,AppVersion);
                 BeginInvoke((MethodInvoker)delegate
                 {
                     updateCheckRunning=false; updateButton.Enabled=true;
                     if(newer)
                     {
-                        DialogResult dr=MessageBox.Show("New Typing Watch version available: "+tag+"\\r\\nCurrent: "+AppVersion+"\\r\\n\\r\\nGitHub release page open karein?","Update Available",MessageBoxButtons.YesNo,MessageBoxIcon.Information);
+                        DialogResult dr=MessageBox.Show("New Typing Watch version available: "+tag+"\r\nCurrent: "+AppVersion+"\r\n\r\nGitHub release page open karein?","Update Available",MessageBoxButtons.YesNo,MessageBoxIcon.Information);
                         if(dr==DialogResult.Yes && !String.IsNullOrWhiteSpace(url)) Process.Start(new ProcessStartInfo(url){UseShellExecute=true});
                     }
                     else if(manual) MessageBox.Show("Latest version installed hai ("+AppVersion+").","Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Information);
@@ -584,7 +541,7 @@ class TypingWatch : Form
             }
             catch(Exception ex)
             {
-                BeginInvoke((MethodInvoker)delegate { updateCheckRunning=false; updateButton.Enabled=true; if(manual) MessageBox.Show("Update check failed.\\r\\n\\r\\n"+ex.Message,"Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Warning); });
+                BeginInvoke((MethodInvoker)delegate { updateCheckRunning=false; updateButton.Enabled=true; if(manual) MessageBox.Show("Update check failed.\r\n\r\n"+ex.Message,"Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Warning); });
             }
         });
     }
@@ -648,47 +605,56 @@ class TypingWatch : Form
         bool active=(now-lastKey).TotalSeconds<5;
 
         // Estimate WPM from the actual time span covered by recent character-producing
-        // key-down events, rather than always dividing by a fixed 3 seconds. This avoids
-        // artificially low readings just after typing starts. Convention: 5 characters = 1 word.
-        double targetWpm = 0.0;
-        if(active && recentKeys.Count >= 2)
+        // key events. A single key is treated as one character.
+        if(active && recentKeys.Count>0)
         {
-            DateTime first=recentKeys.Peek();
-            double span=(now-first).TotalSeconds;
-            if(span < 0.25) span=0.25; // prevent a single fast burst from producing infinity
-            targetWpm=(recentKeys.Count * 12.0) / span; // events / sec * 12 = WPM
-            if(targetWpm > 300.0) targetWpm=300.0;
+            double seconds=Math.Max(0.25,(now-recentKeys.Peek()).TotalSeconds);
+            displayedWpm=(recentKeys.Count/5.0)*(60.0/seconds);
         }
-        else if(active && recentKeys.Count == 1)
+        else if(!active) displayedWpm=0;
+        displayedWpm=Math.Max(0,Math.Min(120,displayedWpm));
+
+        meter.Wpm=(int)Math.Round(displayedWpm);
+        meter.MinWpm=minWpm;
+        meter.Warning=active && minWpm>0 && displayedWpm<minWpm;
+        meter.Invalidate();
+
+        bool licensed=IsLicenseValid(ReadLicense());
+        if(!licensed)
         {
-            // Show a quick initial response, but don't treat one key as a full word.
-            targetWpm=12.0;
+            if(!File.Exists(trialFile))
+            {
+                try { File.WriteAllText(trialFile,DateTime.Now.ToString("o")); } catch { }
+            }
+            DateTime start;
+            if(DateTime.TryParse(File.Exists(trialFile)?File.ReadAllText(trialFile):"",null,System.Globalization.DateTimeStyles.RoundtripKind,out start))
+                trialExpired=(DateTime.Now-start).TotalDays>=5;
         }
+        else trialExpired=false;
 
-        // Rise quickly to follow live typing; fall gently for a smooth needle.
-        double blend = targetWpm < displayedWpm ? 0.28 : 0.70;
-        displayedWpm += (targetWpm-displayedWpm)*blend;
-        if(!active && (now-lastKey).TotalSeconds>=5) displayedWpm=0;
-        if(displayedWpm < 0.5) displayedWpm=0;
-        int wpm=(int)Math.Round(displayedWpm);
+        licenseStatusLabel.Text=licensed?"LICENSE: ACTIVE":(trialExpired?"TRIAL EXPIRED":"FREE TRIAL");
+        licenseStatusLabel.ForeColor=licensed?Color.DarkGreen:(trialExpired?Color.Red:Color.DarkOrange);
 
-        TimeSpan remain=TimeSpan.FromHours(100)-total;
-        if(remain<TimeSpan.Zero) remain=TimeSpan.Zero;
+        TimeSpan remaining=TimeSpan.FromHours(100)-total;
+        if(remaining<TimeSpan.Zero) remaining=TimeSpan.Zero;
+        label.Text="⌨ TYPING WATCH\r\n\r\n"+
+            "Total: "+Format(total)+"\r\n"+
+            "Today: "+Format(today)+"\r\n"+
+            "Hindi: "+Format(hindiTotal)+"\r\n"+
+            "English: "+Format(englishTotal)+"\r\n"+
+            "Remaining (100h): "+Format(remaining)+"\r\n\r\n"+
+            "WPM: "+((int)Math.Round(displayedWpm))+"\r\n"+
+            "Keyboard: "+(active?"ACTIVE":"PAUSED (5s)")+"\r\n"+
+            "Hook: "+(hook!=IntPtr.Zero?"OK":"RETRYING")+"\r\n"+
+            "Online: "+onlineUsers;
 
-        bool warningKeyboardActive = (now-lastKey).TotalSeconds < 1.5;
-        bool belowLimit = warningKeyboardActive && minWpm > 0 && wpm < minWpm;
-        if(belowLimit)
+        if(active && beepEnabled && minWpm>0 && displayedWpm<minWpm)
         {
             if(belowLimitSince==DateTime.MinValue) belowLimitSince=now;
-            if((now-belowLimitSince).TotalSeconds>=5 && beepEnabled)
+            if(now>=nextWarningBeepAt && (now-belowLimitSince).TotalSeconds>=2)
             {
-                // First beep after 5 seconds below limit, then repeat every 1 second.
-                // The belowLimit condition includes recent keyboard activity, so idle stops beeps.
-                if(nextWarningBeepAt==DateTime.MinValue || now>=nextWarningBeepAt)
-                {
-                    System.Media.SystemSounds.Beep.Play();
-                    nextWarningBeepAt=now.AddSeconds(1);
-                }
+                try { System.Media.SystemSounds.Beep.Play(); } catch { }
+                nextWarningBeepAt=now.AddSeconds(1);
             }
         }
         else
@@ -697,174 +663,61 @@ class TypingWatch : Form
             nextWarningBeepAt=DateTime.MinValue;
         }
 
-        meter.Wpm=wpm;
-        meter.MinWpm=minWpm;
-        meter.Warning=belowLimit && belowLimitSince!=DateTime.MinValue && (now-belowLimitSince).TotalSeconds>=5;
-        meter.Invalidate();
-
-        UpdateLicenseStatus();
-        if(!OnlineConfigured()) onlineUsersLabel.Text="🌐 Online users: server not connected";
-        string langName=lastTypingLanguage==TypingLanguage.Hindi?"HINDI":(lastTypingLanguage==TypingLanguage.English?"ENGLISH":"UNKNOWN");
-        label.Text="⌨ TYPING WATCH\r\n\r\n"+
-                   "🇮🇳 Hindi Total:   "+F(hindiTotal)+"\r\n"+
-                   "   Hindi Today:   "+F(hindiToday)+"\r\n\r\n"+
-                   "🇬🇧 English Total: "+F(englishTotal)+"\r\n"+
-                   "   English Today: "+F(englishToday)+"\r\n\r\n"+
-                   "Overall Total: "+F(total)+"\r\n"+
-                   "100-Hour Remaining: "+F(remain)+"\r\n\r\n"+
-                   (active?"● KEYBOARD ACTIVE — "+langName:"● PAUSED — 5 sec idle")+
-                   "\r\nWPM limit: "+minWpm+" | Beep: "+(beepEnabled?"ON":"OFF")+(hook==IntPtr.Zero?"\r\nKeyboard hook failed (error "+lastHookError+")":"\r\nGlobal keyboard hook: ON");
-
-        if(now.Second%5==0) SaveData();
-    }
-
-    void UpdateLicenseStatus()
-    {
-        string saved=ReadLicense();
-        if(IsLicenseValid(saved))
+        if(now.Second%5==0)
         {
-            string[] parts=saved.Split('|');
-            if(parts.Length>=2 && parts[1].Trim().Equals("LIFETIME",StringComparison.OrdinalIgnoreCase))
-            {
-                licenseStatusLabel.Text="LICENSE: ACTIVATED (LIFETIME)";
-            }
-            else
-            {
-                DateTime until;
-                if(parts.Length>=2 && DateTime.TryParseExact(parts[1].Trim(),"yyyyMMdd",
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    System.Globalization.DateTimeStyles.None,out until))
-                    licenseStatusLabel.Text="LICENSE: ACTIVATED (UNTIL "+until.ToString("dd-MMM-yyyy")+")";
-                else
-                    licenseStatusLabel.Text="LICENSE: ACTIVATED";
-            }
-            licenseStatusLabel.ForeColor=Color.ForestGreen;
-            return;
-        }
-
-        if(!String.IsNullOrEmpty(saved))
-        {
-            string[] parts=saved.Split('|');
-            DateTime until;
-            if(parts.Length>=2 && DateTime.TryParseExact(parts[1].Trim(),"yyyyMMdd",
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None,out until) && DateTime.Now.Date>until.Date)
-                licenseStatusLabel.Text="LICENSE EXPIRED";
-            else
-                licenseStatusLabel.Text="LICENSE INVALID";
-            licenseStatusLabel.ForeColor=Color.Red;
-            return;
-        }
-
-        DateTime start;
-        try
-        {
-            if(File.Exists(trialFile) && DateTime.TryParse(File.ReadAllText(trialFile),null,
-                System.Globalization.DateTimeStyles.RoundtripKind,out start))
-            {
-                double days=(DateTime.Now-start).TotalDays;
-                int remaining=(days<0 || days>=5) ? 0 : Math.Max(0,(int)Math.Ceiling(5-days));
-                if(remaining>0)
-                {
-                    licenseStatusLabel.Text="FREE TRIAL: "+remaining+" DAY"+(remaining==1?"":"S")+" LEFT";
-                    licenseStatusLabel.ForeColor=Color.DarkOrange;
-                }
-                else
-                {
-                    licenseStatusLabel.Text="TRIAL EXPIRED - LICENSE REQUIRED";
-                    licenseStatusLabel.ForeColor=Color.Red;
-                }
-            }
-            else
-            {
-                licenseStatusLabel.Text="FREE TRIAL";
-                licenseStatusLabel.ForeColor=Color.DarkOrange;
-            }
-        }
-        catch
-        {
-            licenseStatusLabel.Text="LICENSE STATUS UNAVAILABLE";
-            licenseStatusLabel.ForeColor=Color.Red;
+            try { SaveData(); } catch { }
         }
     }
 
-    string F(TimeSpan t)
+    string Format(TimeSpan t)
     {
         return string.Format("{0:00}:{1:00}:{2:00}",(int)t.TotalHours,t.Minutes,t.Seconds);
     }
 
-    TypingLanguage GetCurrentTypingLanguage()
-    {
-        try
-        {
-            IntPtr hwnd=GetForegroundWindow();
-            if(hwnd==IntPtr.Zero) return TypingLanguage.Unknown;
-            uint pid;
-            uint thread=GetWindowThreadProcessId(hwnd,out pid);
-            IntPtr hkl=GetKeyboardLayout(thread);
-            int lang=(int)((long)hkl & 0xFFFF);
-            // Hindi keyboard layouts use primary language ID 0x39.
-            if((lang & 0x03FF)==0x39) return TypingLanguage.Hindi;
-            // Treat other common layouts as English. This includes English-US/UK/India.
-            return TypingLanguage.English;
-        }
-        catch { return TypingLanguage.Unknown; }
-    }
-
     IntPtr HookCallback(int nCode,IntPtr wParam,IntPtr lParam)
     {
-        // Native callbacks must never leak managed exceptions back into Windows.
-        try
+        if(nCode>=0 && (wParam==new IntPtr(WM_KEYDOWN) || wParam==new IntPtr(WM_SYSKEYDOWN)))
         {
-            if(nCode>=0 && (wParam.ToInt32()==WM_KEYDOWN || wParam.ToInt32()==WM_SYSKEYDOWN) && lParam!=IntPtr.Zero)
+            DateTime now=DateTime.Now;
+            lastKey=now;
+            keys++;
+            recentKeys.Enqueue(now);
+            wpmStart=now;
+
+            try
             {
-                int vkCode=Marshal.ReadInt32(lParam);
-                if(IsActivityKey(vkCode))
-                {
-                    lastKey=DateTime.Now;
-                    TypingLanguage detected=GetCurrentTypingLanguage();
-                    if(detected!=TypingLanguage.Unknown) lastTypingLanguage=detected;
-                }
-                if(IsCountableKey(vkCode))
-                {
-                    DateTime stamp=DateTime.Now;
-                    keys++;
-                    recentKeys.Enqueue(stamp);
-                }
+                IntPtr hwnd=GetForegroundWindow();
+                uint pid;
+                uint tid=GetWindowThreadProcessId(hwnd,out pid);
+                IntPtr layout=GetKeyboardLayout(tid);
+                long value=layout.ToInt64();
+                int lang=(int)(value & 0xFFFF);
+                // Hindi/Devanagari layouts commonly use 0x0439; otherwise treat as English.
+                lastTypingLanguage=(lang==0x0439 || lang==0x0440 || lang==0x0461)?TypingLanguage.Hindi:TypingLanguage.English;
             }
+            catch { if(lastTypingLanguage==TypingLanguage.Unknown) lastTypingLanguage=TypingLanguage.English; }
         }
-        catch { }
         return CallNextHookEx(hook,nCode,wParam,lParam);
-    }
-
-    bool IsActivityKey(int vk)
-    {
-        // Ignore modifier-only keys, but count other keyboard activity for idle detection.
-        return vk!=0x10 && vk!=0x11 && vk!=0x12 && vk!=0x5B && vk!=0x5C &&
-               vk!=0xA0 && vk!=0xA1 && vk!=0xA2 && vk!=0xA3 && vk!=0xA4 && vk!=0xA5;
-    }
-
-    // Count character-producing keys, not Shift/Ctrl/Alt, arrows, function keys, etc.
-    // This keeps modifier presses from falsely increasing the displayed typing speed.
-    bool IsCountableKey(int vk)
-    {
-        if(vk>=0x30 && vk<=0x39) return true;       // number row
-        if(vk>=0x41 && vk<=0x5A) return true;       // letters
-        if(vk>=0x60 && vk<=0x69) return true;       // numeric keypad
-        if(vk==0x20) return true;                   // space
-        if(vk>=0xBA && vk<=0xC0) return true;       // punctuation keys
-        if(vk>=0xDB && vk<=0xDE) return true;       // bracket/quote/punctuation keys
-        return false;
     }
 
     [STAThread] static void Main()
     {
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e)
+        {
+            try
+            {
+                string d=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"TypingWatch");
+                Directory.CreateDirectory(d);
+                File.AppendAllText(Path.Combine(d,"errors.log"),DateTime.Now.ToString("o")+" | UI | "+e.Exception+Environment.NewLine);
+            }
+            catch { }
+        };
         Application.Run(new TypingWatch());
     }
 }
-
 
 class LicenseForm:Form
 {
@@ -872,31 +725,25 @@ class LicenseForm:Form
     TextBox box=new TextBox();
     public LicenseForm()
     {
-        Text="TypingWatch License Activation"; Width=500; Height=175;
-        FormBorderStyle=FormBorderStyle.FixedDialog; StartPosition=FormStartPosition.CenterScreen;
-        MaximizeBox=false; MinimizeBox=false; TopMost=true;
-        Label l=new Label(){Text="License key paste karein:",Left=15,Top=18,Width=430};
-        box.SetBounds(15,45,455,25);
-        Button ok=new Button(){Text="Activate",Left=270,Top=82,Width=90};
-        Button cancel=new Button(){Text="Cancel",Left=370,Top=82,Width=90};
-        ok.Click+=(s,e)=>{LicenseKey=box.Text.Trim();DialogResult=DialogResult.OK;Close();};
+        Text="Typing Watch — License"; Width=500; Height=190; FormBorderStyle=FormBorderStyle.FixedDialog; StartPosition=FormStartPosition.CenterParent; MaximizeBox=false; MinimizeBox=false;
+        Label info=new Label(){Text="License key paste karein:",Left=15,Top=18,Width=450};
+        box.SetBounds(15,48,450,28);
+        Button ok=new Button(){Text="Activate",Left=285,Top=92,Width=85};
+        Button cancel=new Button(){Text="Cancel",Left=380,Top=92,Width=85};
+        ok.Click+=(s,e)=>{LicenseKey=box.Text.Trim(); if(LicenseKey.Length==0){MessageBox.Show("License key required hai.");return;} DialogResult=DialogResult.OK;Close();};
         cancel.Click+=(s,e)=>{DialogResult=DialogResult.Cancel;Close();};
-        Controls.AddRange(new Control[]{l,box,ok,cancel}); AcceptButton=ok; CancelButton=cancel;
+        Controls.AddRange(new Control[]{info,box,ok,cancel}); AcceptButton=ok; CancelButton=cancel;
     }
 }
 
-
 class PaymentForm:Form
 {
-    ComboBox plan=new ComboBox(); TextBox customerName=new TextBox(); TextBox customerEmail=new TextBox(); TextBox phone=new TextBox();
-    PictureBox qr=new PictureBox();
     const string OwnerEmail="bossbabysweetheart@gmail.com";
+    ComboBox plan=new ComboBox(); TextBox customerName=new TextBox(); TextBox customerEmail=new TextBox(); TextBox phone=new TextBox(); PictureBox qr=new PictureBox();
     public PaymentForm()
     {
-        Text="TypingWatch — Payment / License"; Width=650; Height=690;
-        FormBorderStyle=FormBorderStyle.FixedDialog; StartPosition=FormStartPosition.CenterScreen;
-        MaximizeBox=false; MinimizeBox=false; AutoScroll=true; TopMost=true; BackColor=Color.White;
-        Label title=new Label(){Text="TypingWatch License Purchase",Left=18,Top=12,Width=590,Height=28,Font=new Font("Segoe UI",13,FontStyle.Bold)};
+        Text="Typing Watch — Payment / Buy License"; Width=650; Height=610; StartPosition=FormStartPosition.CenterParent; FormBorderStyle=FormBorderStyle.FixedDialog; MaximizeBox=false; MinimizeBox=false; TopMost=true;
+        Label title=new Label(){Text="Typing Watch License Plans",Left=18,Top=15,Width=590,Height=30,Font=new Font("Segoe UI",14,FontStyle.Bold)};
         Label choose=new Label(){Text="Plan chunein:",Left=18,Top=49,Width=140};
         plan.SetBounds(160,46,300,28); plan.DropDownStyle=ComboBoxStyle.DropDownList;
         plan.Items.AddRange(new object[]{"Basic — 4 Months — ₹50","Standard — 6 Months — ₹60","Premium — 12 Months — ₹70"}); plan.SelectedIndex=1;
