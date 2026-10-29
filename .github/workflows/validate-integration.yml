@@ -1,0 +1,47 @@
+name: Validate Typing Watch integration
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'backend/Code.gs'
+      - 'admin.html'
+      - 'src/TypingWatch_Complete_Online.cs'
+      - 'version.json'
+      - '.github/workflows/validate-integration.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Validate Apps Script syntax
+        run: |
+          cp backend/Code.gs /tmp/typingwatch-backend.js
+          node --check /tmp/typingwatch-backend.js
+      - name: Check shared endpoint and action contracts
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const backend = fs.readFileSync('backend/Code.gs', 'utf8');
+          const admin = fs.readFileSync('admin.html', 'utf8');
+          const app = fs.readFileSync('src/TypingWatch_Complete_Online.cs', 'utf8');
+          const checks = [
+            ['backend health route', /action === 'health'/.test(backend)],
+            ['backend heartbeat route', /action === 'heartbeat'/.test(backend)],
+            ['backend stats route', /action === 'stats'/.test(backend)],
+            ['backend config route', /action === 'config'/.test(backend)],
+            ['backend chat routes', /action === 'chat'/.test(backend) && /action === 'chatsend'/.test(backend)],
+            ['admin health test', /action=health/.test(admin)],
+            ['admin writes use protected admin operation', /action:'admin',token:t,op:op/.test(admin)],
+            ['desktop app heartbeat', /\\"action\\":\\"heartbeat\\"/.test(app)],
+            ['desktop app reads stats', /\?action=stats/.test(app)],
+            ['desktop app reads config', /\?action=config/.test(app)],
+            ['version file exists', fs.existsSync('version.json')]
+          ];
+          for (const [name, ok] of checks) {
+            console.log((ok ? 'PASS ' : 'FAIL ') + name);
+            if (!ok) process.exitCode = 1;
+          }
+          NODE
