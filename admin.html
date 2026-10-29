@@ -1,447 +1,1632 @@
-
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Typing Watch Admin</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef4f7;color:#13212b}
-.top{background:#16324f;color:#fff;padding:18px 22px}
-.topin{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:15px}
-.top h1{margin:0;font-size:24px}.top small{opacity:.75}
-.wrap{max-width:1200px;margin:auto;padding:20px}
-.bar,.section{background:#fff;border:1px solid #d6e0e6;border-radius:14px}
-.bar{padding:14px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;background:#16324f;color:#fff;text-decoration:none;display:inline-block}
-.btn.alt{background:#2b6f77}.btn.danger{background:#9b3333}
-.status{margin-left:auto;font-size:13px;color:#647783}
-.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-.card{background:#fff;border:1px solid #d6e0e6;border-radius:14px;padding:17px}
-.label{font-size:12px;color:#647783}.num{font-size:29px;font-weight:800;margin-top:8px}
-.section{margin-top:16px;padding:18px}.section h2{font-size:18px;margin:0 0 12px}
-.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:760px}
-.table th,.table td{padding:10px;border-bottom:1px solid #e4ebef;text-align:left;font-size:13px}
-.table th{background:#f5f8fa}
-.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#e7f5ea;color:#23743a;font-weight:700;font-size:11px}
-.warn{background:#fff4dc;color:#8a5b00}
-.box{padding:12px;background:#f5f8fa;border-radius:10px;font-size:13px;line-height:1.55}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.field{display:flex;flex-direction:column;gap:6px}
-.field label{font-size:12px;color:#647783;font-weight:700}
-.field input,.field textarea{border:1px solid #cbd8df;border-radius:9px;padding:10px;font:inherit}
-.field textarea{min-height:90px;resize:vertical}
-.full{grid-column:1/-1}.result{margin-top:10px;font-size:13px;overflow-wrap:anywhere}
-.muted{color:#71828d}
-@media(max-width:1000px){.cards{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:850px){.cards{grid-template-columns:repeat(2,1fr)}.grid2,.formgrid{grid-template-columns:1fr}}
-@media(max-width:480px){.cards{grid-template-columns:1fr}}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#eef4f7;
+  color:#13212b;
+}
+
+.top{
+  background:#16324f;
+  color:#fff;
+  padding:18px 22px;
+}
+
+.topin{
+  max-width:1200px;
+  margin:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+}
+
+.top h1{
+  margin:0;
+  font-size:24px
+}
+
+.top small{
+  opacity:.75
+}
+
+.wrap{
+  max-width:1200px;
+  margin:auto;
+  padding:20px
+}
+
+.bar,.section{
+  background:#fff;
+  border:1px solid #d6e0e6;
+  border-radius:14px
+}
+
+.bar{
+  padding:14px;
+  margin-bottom:16px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center
+}
+
+.btn{
+  border:0;
+  border-radius:9px;
+  padding:10px 14px;
+  font-weight:700;
+  cursor:pointer;
+  background:#16324f;
+  color:#fff;
+  text-decoration:none;
+  display:inline-block
+}
+
+.btn.alt{
+  background:#2b6f77
+}
+
+.btn.danger{
+  background:#9b3333
+}
+
+.status{
+  margin-left:auto;
+  font-size:13px;
+  color:#647783
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:12px
+}
+
+.card{
+  background:#fff;
+  border:1px solid #d6e0e6;
+  border-radius:14px;
+  padding:17px
+}
+
+.label{
+  font-size:12px;
+  color:#647783
+}
+
+.num{
+  font-size:29px;
+  font-weight:800;
+  margin-top:8px
+}
+
+.section{
+  margin-top:16px;
+  padding:18px
+}
+
+.section h2{
+  font-size:18px;
+  margin:0 0 12px
+}
+
+.tablewrap{
+  overflow:auto
+}
+
+.table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:760px
+}
+
+.table th,.table td{
+  padding:10px;
+  border-bottom:1px solid #e4ebef;
+  text-align:left;
+  font-size:13px
+}
+
+.table th{
+  background:#f5f8fa
+}
+
+.pill{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#e7f5ea;
+  color:#23743a;
+  font-weight:700;
+  font-size:11px
+}
+
+.warn{
+  background:#fff4dc;
+  color:#8a5b00
+}
+
+.box{
+  padding:12px;
+  background:#f5f8fa;
+  border-radius:10px;
+  font-size:13px;
+  line-height:1.55
+}
+
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px
+}
+
+.formgrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:6px
+}
+
+.field label{
+  font-size:12px;
+  color:#647783;
+  font-weight:700
+}
+
+.field input,.field textarea{
+  border:1px solid #cbd8df;
+  border-radius:9px;
+  padding:10px;
+  font:inherit
+}
+
+.field textarea{
+  min-height:90px;
+  resize:vertical
+}
+
+.full{
+  grid-column:1/-1
+}
+
+.result{
+  margin-top:10px;
+  font-size:13px;
+  overflow-wrap:anywhere
+}
+
+.muted{
+  color:#71828d
+}
+
+@media(max-width:1000px){
+  .cards{
+    grid-template-columns:repeat(3,1fr)
+  }
+}
+
+@media(max-width:850px){
+  .cards{
+    grid-template-columns:repeat(2,1fr)
+  }
+
+  .grid2,.formgrid{
+    grid-template-columns:1fr
+  }
+}
+
+@media(max-width:480px){
+  .cards{
+    grid-template-columns:1fr
+  }
+}
 </style>
 </head>
+
 <body>
+
 <header class="top">
   <div class="topin">
     <div>
       <h1>Typing Watch Admin</h1>
       <small>Live control &amp; monitoring panel</small>
     </div>
-    <div id="serverState">● Checking server...</div>
+
+    <div id="serverState">
+      ● Checking server...
+    </div>
   </div>
 </header>
 
 <main class="wrap">
+
   <div class="bar">
-    <button class="btn" onclick="refreshAll(true)">↻ Refresh</button>
-    <button class="btn alt" onclick="testConnection()">Test Server</button>
-    <button class="btn alt" onclick="loadConfig()">📢 Refresh Announcement</button>
-    <button class="btn danger" onclick="toggleMaintenance()">Toggle Maintenance</button>
-    <a class="btn" href="https://github.com/typingMonery-cloud/typingWatch/raw/7457c2cdd5a7fb03f45042148690f688e98247d9/TypingWatch.exe">⬇ Original Working EXE</a>
-    <button class="btn danger" onclick="clearToken()">Clear Admin Token</button>
-    <span class="status" id="lastUpdate">Not loaded</span>
+
+    <button class="btn" onclick="refreshAll(true)">
+      ↻ Refresh
+    </button>
+
+    <button class="btn alt" onclick="testConnection()">
+      Test Server
+    </button>
+
+    <button class="btn alt" onclick="loadConfig()">
+      📢 Refresh Announcement
+    </button>
+
+    <button class="btn danger" onclick="toggleMaintenance()">
+      Toggle Maintenance
+    </button>
+
+    <a
+      class="btn"
+      href="https://github.com/typingMonery-cloud/typingWatch/raw/7457c2cdd5a7fb03f45042148690f688e98247d9/TypingWatch.exe">
+      ⬇ Original Working EXE
+    </a>
+
+    <button class="btn danger" onclick="clearToken()">
+      Clear Admin Token
+    </button>
+
+    <span class="status" id="lastUpdate">
+      Not loaded
+    </span>
+
   </div>
 
+
+  <!-- DASHBOARD CARDS -->
+
   <section class="cards">
-    <div class="card"><div class="label">LIVE USERS</div><div class="num" id="liveUsers">—</div></div>
-    <div class="card"><div class="label">TYPING NOW</div><div class="num" id="typingNow">—</div></div>
-    <div class="card"><div class="label">APP VERSION</div><div class="num" id="appVersion">—</div></div>
-    <div class="card"><div class="label">DOWNLOADS</div><div class="num" id="downloadCount">—</div></div>
-    <div class="card"><div class="label">ACTIVE LICENSES</div><div class="num" id="activeLicenses">—</div></div>
+
+    <div class="card">
+      <div class="label">LIVE USERS</div>
+      <div class="num" id="liveUsers">—</div>
+    </div>
+
+    <div class="card">
+      <div class="label">TYPING NOW</div>
+      <div class="num" id="typingNow">—</div>
+    </div>
+
+    <div class="card">
+      <div class="label">APP VERSION</div>
+      <div class="num" id="appVersion">—</div>
+    </div>
+
+    <div class="card">
+      <div class="label">DOWNLOADS</div>
+      <div class="num" id="downloadCount">—</div>
+    </div>
+
+    <div class="card">
+      <div class="label">ACTIVE LICENSES</div>
+      <div class="num" id="activeLicenses">—</div>
+    </div>
+
   </section>
+
+
+  <!-- LIVE USERS -->
 
   <section class="section">
+
     <h2>Live Users</h2>
+
     <div class="tablewrap">
+
       <table class="table">
-        <thead><tr><th>User ID</th><th>Last Seen</th><th>Typing</th><th>Language</th><th>WPM</th><th>Version</th></tr></thead>
-        <tbody id="users"><tr><td colspan="6">Loading…</td></tr></tbody>
+
+        <thead>
+          <tr>
+            <th>User ID</th>
+            <th>Last Seen</th>
+            <th>Typing</th>
+            <th>Language</th>
+            <th>WPM</th>
+            <th>Version</th>
+          </tr>
+        </thead>
+
+        <tbody id="users">
+          <tr>
+            <td colspan="6">Loading…</td>
+          </tr>
+        </tbody>
+
       </table>
+
     </div>
+
   </section>
 
+
+  <!-- ANNOUNCEMENT / CONNECTION -->
+
   <section class="grid2">
+
     <div class="section">
+
       <h2>Announcement</h2>
-      <div class="box" id="announcement">Loading…</div>
+
+      <div class="box" id="announcement">
+        Loading…
+      </div>
+
     </div>
+
+
     <div class="section">
+
       <h2>Connection</h2>
+
       <div class="box">
+
         Backend: Google Apps Script<br>
         Heartbeat: Typing Watch → server<br>
         Stats: <code>?action=stats</code><br>
         Config: <code>?action=config</code><br>
+        Health: <code>?action=health</code><br>
         Private admin data: authenticated POST requests
+
       </div>
+
     </div>
+
   </section>
 
+
+  <!-- ADMIN CONTROLS -->
+
   <section class="section">
+
     <h2>Admin Controls</h2>
+
     <div class="box muted">
-      Admin token इस browser session में ही रखा जाता है। इसे public source code में न लिखें।
+
+      Admin token इस browser session में ही रखा जाता है।
+      इसे public source code में न लिखें।
       Private data देखने और बदलाव सेव करने के लिए सही token आवश्यक है।
+
     </div>
+
 
     <div class="formgrid" style="margin-top:12px">
+
       <div class="field full">
+
         <label>Announcement</label>
-        <textarea id="announcementInput" placeholder="Message shown by Typing Watch"></textarea>
-        <button class="btn" onclick="setAnnouncement()">Save Announcement</button>
+
+        <textarea
+          id="announcementInput"
+          placeholder="Message shown by Typing Watch"></textarea>
+
+        <button class="btn" onclick="setAnnouncement()">
+          Save Announcement
+        </button>
+
       </div>
 
+
       <div class="field">
+
         <label>App Version</label>
-        <input id="versionInput" placeholder="1.0.3">
-        <button class="btn" onclick="setVersion()">Save Version</button>
+
+        <input
+          id="versionInput"
+          placeholder="1.0.3">
+
+        <button class="btn" onclick="setVersion()">
+          Save Version
+        </button>
+
       </div>
 
+
       <div class="field">
+
         <label>Online Threshold (minutes)</label>
-        <input id="thresholdInput" type="number" min="1" max="1440" value="2">
-        <button class="btn" onclick="setThreshold()">Save Threshold</button>
+
+        <input
+          id="thresholdInput"
+          type="number"
+          min="1"
+          max="1440"
+          value="2">
+
+        <button class="btn" onclick="setThreshold()">
+          Save Threshold
+        </button>
+
       </div>
+
 
       <div class="field">
+
         <label>License Key</label>
-        <input id="licenseKey" placeholder="TW-PRO-2026-0002">
-        <input id="licenseUser" placeholder="User ID (optional)">
-        <input id="licenseExpiry" placeholder="Expiry date (optional)">
-        <button class="btn" onclick="addLicense()">Add License</button>
+
+        <input
+          id="licenseKey"
+          placeholder="TW-PRO-2026-0002">
+
+        <input
+          id="licenseUser"
+          placeholder="User ID (optional)">
+
+        <input
+          id="licenseExpiry"
+          placeholder="Expiry date (optional)">
+
+        <button class="btn" onclick="addLicense()">
+          Add License
+        </button>
+
       </div>
+
     </div>
-    <div class="result" id="adminResult" role="status"></div>
+
+
+    <div
+      class="result"
+      id="adminResult"
+      role="status">
+    </div>
+
   </section>
 
+
+  <!-- LICENSES -->
+
   <section class="section">
+
     <h2>Licenses</h2>
+
     <div class="tablewrap">
+
       <table class="table">
-        <thead><tr><th>License</th><th>Status</th><th>User ID</th><th>Created</th><th>Expires</th></tr></thead>
-        <tbody id="licenses"><tr><td colspan="5">Click Refresh to load private data.</td></tr></tbody>
+
+        <thead>
+
+          <tr>
+            <th>License</th>
+            <th>Status</th>
+            <th>User ID</th>
+            <th>Created</th>
+            <th>Expires</th>
+          </tr>
+
+        </thead>
+
+        <tbody id="licenses">
+
+          <tr>
+            <td colspan="5">
+              Click Refresh to load private data.
+            </td>
+          </tr>
+
+        </tbody>
+
       </table>
+
     </div>
+
   </section>
 
+
+  <!-- DOWNLOADS -->
+
   <section class="section">
+
     <h2>Recent Downloads</h2>
+
     <div class="tablewrap">
+
       <table class="table">
-        <thead><tr><th>Time</th><th>Version</th><th>Event</th><th>User ID</th></tr></thead>
-        <tbody id="downloads"><tr><td colspan="4">Click Refresh to load private data.</td></tr></tbody>
+
+        <thead>
+
+          <tr>
+            <th>Time</th>
+            <th>Version</th>
+            <th>Event</th>
+            <th>User ID</th>
+          </tr>
+
+        </thead>
+
+        <tbody id="downloads">
+
+          <tr>
+            <td colspan="4">
+              Click Refresh to load private data.
+            </td>
+          </tr>
+
+        </tbody>
+
       </table>
+
     </div>
+
   </section>
+
 </main>
 
+
 <script>
+
 'use strict';
 
-const API = 'https://script.google.com/macros/s/AKfycbxqCie36dJeZXBTRDsFMDhFYE0vZHnhXFdH1laGqTLScO-IPTlqZJ9IOotb91oJfR2QUA/exec';
+
+/* =========================================================
+   TYPING WATCH BACKEND
+   NEW / CORRECT GOOGLE APPS SCRIPT URL
+   ========================================================= */
+
+const API =
+'https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec';
+
+
+/* =========================================================
+   HTML ESCAPE
+   ========================================================= */
 
 function esc(v) {
-  return String(v == null ? '' : v).replace(/[&<>"]/g, function(m) {
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m];
-  });
+
+  return String(v == null ? '' : v)
+    .replace(/[&<>"]/g, function(m) {
+
+      return {
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;'
+      }[m];
+
+    });
+
 }
+
+
+/* =========================================================
+   ADMIN TOKEN
+   ========================================================= */
 
 function token(promptIfMissing = true) {
-  let t = sessionStorage.getItem('tw_admin_token') || '';
+
+  let t =
+    sessionStorage.getItem('tw_admin_token') || '';
+
   if (!t && promptIfMissing) {
-    t = prompt('Enter Typing Watch admin token:') || '';
+
+    t =
+      prompt('Enter Typing Watch admin token:') || '';
+
     t = t.trim();
-    if (t) sessionStorage.setItem('tw_admin_token', t);
+
+    if (t) {
+
+      sessionStorage.setItem(
+        'tw_admin_token',
+        t
+      );
+
+    }
+
   }
+
   return t;
+
 }
+
+
+/* =========================================================
+   CLEAR TOKEN
+   ========================================================= */
 
 function clearToken() {
-  sessionStorage.removeItem('tw_admin_token');
-  document.getElementById('adminResult').textContent =
+
+  sessionStorage.removeItem(
+    'tw_admin_token'
+  );
+
+  document.getElementById(
+    'adminResult'
+  ).textContent =
     'Admin token cleared from this browser session.';
-  document.getElementById('licenses').innerHTML =
+
+  document.getElementById(
+    'licenses'
+  ).innerHTML =
     '<tr><td colspan="5">Admin token cleared. Click Refresh to authenticate again.</td></tr>';
-  document.getElementById('downloads').innerHTML =
+
+  document.getElementById(
+    'downloads'
+  ).innerHTML =
     '<tr><td colspan="4">Admin token cleared. Click Refresh to authenticate again.</td></tr>';
-  document.getElementById('users').innerHTML =
+
+  document.getElementById(
+    'users'
+  ).innerHTML =
     '<tr><td colspan="6">Admin token cleared. Click Refresh to authenticate again.</td></tr>';
-  document.getElementById('activeLicenses').textContent = '—';
+
+  document.getElementById(
+    'activeLicenses'
+  ).textContent = '—';
+
 }
+
+
+/* =========================================================
+   GET REQUEST
+   ========================================================= */
 
 async function get(path) {
-  const r = await fetch(API + path, {cache:'no-store'});
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const d = await r.json();
-  if (d.success === false || d.ok === false) {
-    throw new Error(d.error || d.message || 'Server request failed');
+
+  const url =
+    API + path;
+
+  const r =
+    await fetch(url, {
+      method:'GET',
+      cache:'no-store',
+      redirect:'follow'
+    });
+
+  if (!r.ok) {
+
+    throw new Error(
+      'HTTP ' + r.status
+    );
+
   }
+
+  const d =
+    await r.json();
+
+  if (
+    d.success === false ||
+    d.ok === false
+  ) {
+
+    throw new Error(
+      d.error ||
+      d.message ||
+      'Server request failed'
+    );
+
+  }
+
   return d;
+
 }
+
+
+/* =========================================================
+   POST REQUEST
+   ========================================================= */
 
 async function post(body) {
-  const r = await fetch(API, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(body),
-    cache:'no-store'
-  });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const d = await r.json();
-  if (d.success === false || d.ok === false) {
-    throw new Error(d.error || d.message || 'Server request failed');
+
+  const r =
+    await fetch(API, {
+
+      method:'POST',
+
+      headers:{
+        'Content-Type':
+          'text/plain;charset=utf-8'
+      },
+
+      body:
+        JSON.stringify(body),
+
+      cache:'no-store',
+
+      redirect:'follow'
+
+    });
+
+
+  if (!r.ok) {
+
+    throw new Error(
+      'HTTP ' + r.status
+    );
+
   }
+
+
+  const d =
+    await r.json();
+
+
+  if (
+    d.success === false ||
+    d.ok === false
+  ) {
+
+    throw new Error(
+      d.error ||
+      d.message ||
+      'Server request failed'
+    );
+
+  }
+
+
   return d;
+
 }
 
-async function adminRead(op, askForToken = false) {
-  const t = token(askForToken);
-  if (!t) throw new Error('Admin token required. Click Refresh and enter your token.');
-  return await post({action:'admin', token:t, op:op});
-}
 
-async function loadStats(askForToken = false) {
-  try {
-    const d = await get('?action=stats');
+/* =========================================================
+   ADMIN READ
+   ========================================================= */
 
-    document.getElementById('liveUsers').textContent =
-      d.liveUsers ?? d.onlineUsers ?? '—';
-    document.getElementById('typingNow').textContent = d.typingNow ?? '—';
-    document.getElementById('downloadCount').textContent = d.downloadCount ?? '—';
-    document.getElementById('serverState').textContent = '● Server online';
+async function adminRead(
+  op,
+  askForToken = false
+) {
 
-    // Public stats may not include private User IDs. Fetch them through admin auth.
-    try {
-      const usersData = await adminRead('users', askForToken);
-      const list = usersData.users || usersData.data?.users || [];
-      renderUsers(list);
-    } catch (e) {
-      document.getElementById('users').innerHTML =
-        '<tr><td colspan="6">' + esc(e.message) + '</td></tr>';
-    }
-  } catch (e) {
-    document.getElementById('serverState').textContent = '● Server read failed';
-    document.getElementById('users').innerHTML =
-      '<tr><td colspan="6">' + esc(e.message) + '</td></tr>';
+  const t =
+    token(askForToken);
+
+  if (!t) {
+
+    throw new Error(
+      'Admin token required. Click Refresh and enter your token.'
+    );
+
   }
+
+  return await post({
+
+    action:'admin',
+
+    token:t,
+
+    op:op
+
+  });
+
 }
+
+
+/* =========================================================
+   LOAD STATS
+   ========================================================= */
+
+async function loadStats(
+  askForToken = false
+) {
+
+  try {
+
+    const d =
+      await get('?action=stats');
+
+
+    document.getElementById(
+      'liveUsers'
+    ).textContent =
+      d.liveUsers ??
+      d.onlineUsers ??
+      '—';
+
+
+    document.getElementById(
+      'typingNow'
+    ).textContent =
+      d.typingNow ??
+      '—';
+
+
+    document.getElementById(
+      'downloadCount'
+    ).textContent =
+      d.downloadCount ??
+      '—';
+
+
+    document.getElementById(
+      'serverState'
+    ).textContent =
+      '● Server online';
+
+
+    /* PRIVATE LIVE USER DATA */
+
+    try {
+
+      const usersData =
+        await adminRead(
+          'users',
+          askForToken
+        );
+
+
+      const list =
+        usersData.users ||
+        usersData.data?.users ||
+        [];
+
+
+      renderUsers(list);
+
+
+    } catch (e) {
+
+      document.getElementById(
+        'users'
+      ).innerHTML =
+        '<tr><td colspan="6">' +
+        esc(e.message) +
+        '</td></tr>';
+
+    }
+
+
+  } catch (e) {
+
+    document.getElementById(
+      'serverState'
+    ).textContent =
+      '● Server read failed';
+
+
+    document.getElementById(
+      'users'
+    ).innerHTML =
+      '<tr><td colspan="6">' +
+      esc(e.message) +
+      '</td></tr>';
+
+  }
+
+}
+
+
+/* =========================================================
+   RENDER USERS
+   ========================================================= */
 
 function renderUsers(list) {
-  document.getElementById('users').innerHTML = list.length
-    ? list.map(u => `<tr>
-        <td>${esc(u.userId)}</td>
-        <td>${esc(u.lastSeen)}</td>
-        <td><span class="pill ${u.typing ? '' : 'warn'}">${u.typing ? 'TRUE' : 'FALSE'}</span></td>
-        <td>${esc(u.language)}</td>
-        <td>${esc(u.wpm ?? '—')}</td>
-        <td>${esc(u.version)}</td>
-      </tr>`).join('')
-    : '<tr><td colspan="6">No active users.</td></tr>';
+
+  document.getElementById(
+    'users'
+  ).innerHTML =
+
+    list.length
+
+      ? list.map(u => `
+
+        <tr>
+
+          <td>
+            ${esc(u.userId)}
+          </td>
+
+          <td>
+            ${esc(u.lastSeen)}
+          </td>
+
+          <td>
+
+            <span class="pill ${
+              u.typing ? '' : 'warn'
+            }">
+
+              ${
+                u.typing
+                ? 'TRUE'
+                : 'FALSE'
+              }
+
+            </span>
+
+          </td>
+
+          <td>
+            ${esc(u.language)}
+          </td>
+
+          <td>
+            ${esc(u.wpm ?? '—')}
+          </td>
+
+          <td>
+            ${esc(u.version)}
+          </td>
+
+        </tr>
+
+      `).join('')
+
+      :
+
+      '<tr><td colspan="6">No active users.</td></tr>';
+
 }
+
+
+/* =========================================================
+   LOAD CONFIG
+   ========================================================= */
 
 async function loadConfig() {
+
   try {
-    const d = await get('?action=config');
 
-    document.getElementById('appVersion').textContent =
-      d.appVersion || d.version || '—';
-    document.getElementById('announcement').textContent =
-      d.information || d.announcement || d.message || 'No announcement.';
-    document.getElementById('serverState').textContent =
-      '● Server online' + ((d.maintenanceMode ?? d.MaintenanceMode) ? ' · MAINTENANCE' : '');
+    const d =
+      await get('?action=config');
 
-    document.getElementById('announcementInput').value =
-      d.information || d.announcement || d.message || '';
-    document.getElementById('versionInput').value =
-      d.appVersion || d.version || '';
 
-    // Compatibility backend returns onlineMinutes or threshold.
-    document.getElementById('thresholdInput').value =
-      d.onlineThresholdMinutes ?? d.onlineMinutes ?? d.threshold ?? 2;
+    document.getElementById(
+      'appVersion'
+    ).textContent =
+      d.appVersion ||
+      d.version ||
+      '—';
 
-    // Some backend versions expose downloadCount only in stats.
-    if (d.downloadCount != null) {
-      document.getElementById('downloadCount').textContent = d.downloadCount;
+
+    document.getElementById(
+      'announcement'
+    ).textContent =
+      d.information ||
+      d.announcement ||
+      d.message ||
+      'No announcement.';
+
+
+    document.getElementById(
+      'serverState'
+    ).textContent =
+
+      '● Server online' +
+
+      (
+        d.maintenanceMode ??
+        d.MaintenanceMode
+      )
+
+      ? ' · MAINTENANCE'
+      : '';
+
+
+    document.getElementById(
+      'announcementInput'
+    ).value =
+      d.information ||
+      d.announcement ||
+      d.message ||
+      '';
+
+
+    document.getElementById(
+      'versionInput'
+    ).value =
+      d.appVersion ||
+      d.version ||
+      '';
+
+
+    document.getElementById(
+      'thresholdInput'
+    ).value =
+
+      d.onlineThresholdMinutes ??
+      d.onlineMinutes ??
+      d.threshold ??
+      2;
+
+
+    if (
+      d.downloadCount != null
+    ) {
+
+      document.getElementById(
+        'downloadCount'
+      ).textContent =
+        d.downloadCount;
+
     }
+
+
   } catch (e) {
-    document.getElementById('announcement').textContent =
-      'Config read failed: ' + e.message;
+
+    document.getElementById(
+      'announcement'
+    ).textContent =
+      'Config read failed: ' +
+      e.message;
+
   }
+
 }
 
-async function loadLicenses(askForToken = false) {
+
+/* =========================================================
+   LOAD LICENSES
+   ========================================================= */
+
+async function loadLicenses(
+  askForToken = false
+) {
+
   try {
-    const d = await adminRead('licenses', askForToken);
-    const rows = d.licenses || d.data?.licenses || [];
-    const active = rows.filter(x =>
-      String(x.status || '').toLowerCase() === 'active'
-    ).length;
 
-    document.getElementById('activeLicenses').textContent = active;
-    document.getElementById('licenses').innerHTML = rows.length
-      ? rows.map(x => `<tr>
-          <td>${esc(x.licenseKey)}</td>
-          <td>${esc(x.status)}</td>
-          <td>${esc(x.userId)}</td>
-          <td>${esc(x.createdDate || '—')}</td>
-          <td>${esc(x.expiryDate || '—')}</td>
-        </tr>`).join('')
-      : '<tr><td colspan="5">No licenses returned.</td></tr>';
+    const d =
+      await adminRead(
+        'licenses',
+        askForToken
+      );
+
+
+    const rows =
+      d.licenses ||
+      d.data?.licenses ||
+      [];
+
+
+    const active =
+      rows.filter(x =>
+        String(
+          x.status || ''
+        ).toLowerCase() ===
+        'active'
+      ).length;
+
+
+    document.getElementById(
+      'activeLicenses'
+    ).textContent =
+      active;
+
+
+    document.getElementById(
+      'licenses'
+    ).innerHTML =
+
+      rows.length
+
+        ? rows.map(x => `
+
+          <tr>
+
+            <td>
+              ${esc(x.licenseKey)}
+            </td>
+
+            <td>
+              ${esc(x.status)}
+            </td>
+
+            <td>
+              ${esc(x.userId)}
+            </td>
+
+            <td>
+              ${esc(
+                x.createdDate || '—'
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                x.expiryDate || '—'
+              )}
+            </td>
+
+          </tr>
+
+        `).join('')
+
+        :
+
+        '<tr><td colspan="5">No licenses returned.</td></tr>';
+
+
   } catch (e) {
-    document.getElementById('activeLicenses').textContent = '—';
-    document.getElementById('licenses').innerHTML =
-      '<tr><td colspan="5">' + esc(e.message) + '</td></tr>';
+
+    document.getElementById(
+      'activeLicenses'
+    ).textContent =
+      '—';
+
+
+    document.getElementById(
+      'licenses'
+    ).innerHTML =
+      '<tr><td colspan="5">' +
+      esc(e.message) +
+      '</td></tr>';
+
   }
+
 }
 
-async function loadDownloads(askForToken = false) {
+
+/* =========================================================
+   LOAD DOWNLOADS
+   ========================================================= */
+
+async function loadDownloads(
+  askForToken = false
+) {
+
   try {
-    const d = await adminRead('downloads', askForToken);
-    const rows = d.downloads || d.data?.downloads || [];
 
-    document.getElementById('downloads').innerHTML = rows.length
-      ? rows.map(x => `<tr>
-          <td>${esc(x.timestamp || x.time || '—')}</td>
-          <td>${esc(x.version || '—')}</td>
-          <td>${esc(x.event || x.details || x.source || '—')}</td>
-          <td>${esc(x.userId || '—')}</td>
-        </tr>`).join('')
-      : '<tr><td colspan="4">No downloads recorded.</td></tr>';
+    const d =
+      await adminRead(
+        'downloads',
+        askForToken
+      );
+
+
+    const rows =
+      d.downloads ||
+      d.data?.downloads ||
+      [];
+
+
+    document.getElementById(
+      'downloads'
+    ).innerHTML =
+
+      rows.length
+
+        ? rows.map(x => `
+
+          <tr>
+
+            <td>
+              ${esc(
+                x.timestamp ||
+                x.time ||
+                '—'
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                x.version ||
+                '—'
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                x.event ||
+                x.details ||
+                x.source ||
+                '—'
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                x.userId ||
+                '—'
+              )}
+            </td>
+
+          </tr>
+
+        `).join('')
+
+        :
+
+        '<tr><td colspan="4">No downloads recorded.</td></tr>';
+
+
   } catch (e) {
-    document.getElementById('downloads').innerHTML =
-      '<tr><td colspan="4">' + esc(e.message) + '</td></tr>';
+
+    document.getElementById(
+      'downloads'
+    ).innerHTML =
+      '<tr><td colspan="4">' +
+      esc(e.message) +
+      '</td></tr>';
+
   }
+
 }
+
+
+/* =========================================================
+   TEST CONNECTION
+   ========================================================= */
 
 async function testConnection() {
+
+  const result =
+    document.getElementById(
+      'adminResult'
+    );
+
+  const state =
+    document.getElementById(
+      'serverState'
+    );
+
+
+  state.textContent =
+    '● Testing server...';
+
+  result.textContent =
+    'Connecting to Google Apps Script...';
+
+
   try {
-    const d = await get('?action=health');
-    if (!d.ok && !d.success) {
-      throw new Error(d.error || 'Health check failed');
+
+    const d =
+      await get('?action=health');
+
+
+    if (
+      !d.ok &&
+      !d.success
+    ) {
+
+      throw new Error(
+        d.error ||
+        'Health check failed'
+      );
+
     }
-    document.getElementById('serverState').textContent =
-      '● Server online · ' + (d.service || 'Typing Watch');
-    document.getElementById('adminResult').textContent =
+
+
+    state.textContent =
+      '● Server online · ' +
+      (
+        d.service ||
+        'Typing Watch'
+      );
+
+
+    result.textContent =
       'Server health check passed at ' +
-      (d.serverTime || d.time || new Date().toISOString());
+      (
+        d.serverTime ||
+        d.time ||
+        new Date().toISOString()
+      );
+
+
   } catch (e) {
-    document.getElementById('serverState').textContent =
+
+    state.textContent =
       '● Server connection failed';
-    document.getElementById('adminResult').textContent =
-      'Connection test failed: ' + e.message;
+
+
+    result.textContent =
+      'Connection test failed: ' +
+      e.message;
+
   }
+
 }
+
+
+/* =========================================================
+   TOGGLE MAINTENANCE
+   ========================================================= */
 
 async function toggleMaintenance() {
+
   try {
-    const d = await get('?action=config');
-    const current = (d.maintenanceMode ?? d.MaintenanceMode) === true;
-    await adminOp('maintenance', {enabled:!current});
+
+    const d =
+      await get('?action=config');
+
+
+    const current =
+      (
+        d.maintenanceMode ??
+        d.MaintenanceMode
+      ) === true;
+
+
+    await adminOp(
+      'maintenance',
+      {
+        enabled:!current
+      }
+    );
+
+
   } catch (e) {
-    document.getElementById('adminResult').textContent =
-      'Maintenance change failed: ' + e.message;
+
+    document.getElementById(
+      'adminResult'
+    ).textContent =
+      'Maintenance change failed: ' +
+      e.message;
+
   }
+
 }
 
-async function adminOp(op, extra) {
-  const t = token(true);
+
+/* =========================================================
+   ADMIN OPERATION
+   ========================================================= */
+
+async function adminOp(
+  op,
+  extra
+) {
+
+  const t =
+    token(true);
+
+
   if (!t) {
-    document.getElementById('adminResult').textContent =
+
+    document.getElementById(
+      'adminResult'
+    ).textContent =
       'Cancelled. Admin token was not entered.';
+
     return;
+
   }
 
-  document.getElementById('adminResult').textContent = 'Saving…';
+
+  document.getElementById(
+    'adminResult'
+  ).textContent =
+    'Saving…';
+
 
   try {
-    const d = await post(Object.assign(
-      {action:'admin', token:t, op:op},
-      extra || {}
-    ));
 
-    document.getElementById('adminResult').textContent =
-      d.message || 'Request completed successfully.';
+    const d =
+      await post(
+
+        Object.assign(
+
+          {
+            action:'admin',
+            token:t,
+            op:op
+          },
+
+          extra || {}
+
+        )
+
+      );
+
+
+    document.getElementById(
+      'adminResult'
+    ).textContent =
+      d.message ||
+      'Request completed successfully.';
+
+
     await refreshAll(false);
+
+
   } catch (e) {
-    document.getElementById('adminResult').textContent =
-      'Save failed: ' + e.message;
+
+    document.getElementById(
+      'adminResult'
+    ).textContent =
+      'Save failed: ' +
+      e.message;
+
   }
+
 }
+
+
+/* =========================================================
+   SAVE ANNOUNCEMENT
+   ========================================================= */
 
 function setAnnouncement() {
-  adminOp('announcement', {
-    text:document.getElementById('announcementInput').value
-  });
+
+  adminOp(
+    'announcement',
+    {
+      text:
+        document.getElementById(
+          'announcementInput'
+        ).value
+    }
+  );
+
 }
+
+
+/* =========================================================
+   SAVE VERSION
+   ========================================================= */
 
 function setVersion() {
-  adminOp('version', {
-    version:document.getElementById('versionInput').value.trim()
-  });
+
+  adminOp(
+    'version',
+    {
+      version:
+        document.getElementById(
+          'versionInput'
+        ).value.trim()
+    }
+  );
+
 }
+
+
+/* =========================================================
+   SAVE THRESHOLD
+   ========================================================= */
 
 function setThreshold() {
-  const minutes = Number(document.getElementById('thresholdInput').value);
-  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) {
-    document.getElementById('adminResult').textContent =
+
+  const minutes =
+    Number(
+      document.getElementById(
+        'thresholdInput'
+      ).value
+    );
+
+
+  if (
+    !Number.isInteger(minutes) ||
+    minutes < 1 ||
+    minutes > 1440
+  ) {
+
+    document.getElementById(
+      'adminResult'
+    ).textContent =
       'Threshold must be a whole number from 1 to 1440 minutes.';
+
     return;
+
   }
-  adminOp('threshold', {minutes:minutes});
+
+
+  adminOp(
+    'threshold',
+    {
+      minutes:minutes
+    }
+  );
+
 }
+
+
+/* =========================================================
+   ADD LICENSE
+   ========================================================= */
 
 function addLicense() {
-  const key = document.getElementById('licenseKey').value.trim();
+
+  const key =
+    document.getElementById(
+      'licenseKey'
+    ).value.trim();
+
+
   if (!key) {
-    document.getElementById('adminResult').textContent =
+
+    document.getElementById(
+      'adminResult'
+    ).textContent =
       'Please enter a license key.';
+
     return;
+
   }
 
-  adminOp('license', {
-    key:key,
-    status:'Active',
-    userId:document.getElementById('licenseUser').value.trim(),
-    expiry:document.getElementById('licenseExpiry').value.trim()
-  });
+
+  adminOp(
+
+    'license',
+
+    {
+
+      key:key,
+
+      status:'Active',
+
+      userId:
+        document.getElementById(
+          'licenseUser'
+        ).value.trim(),
+
+      expiry:
+        document.getElementById(
+          'licenseExpiry'
+        ).value.trim()
+
+    }
+
+  );
+
 }
 
-async function refreshAll(askForToken = false) {
-  document.getElementById('lastUpdate').textContent = 'Refreshing…';
+
+/* =========================================================
+   REFRESH ALL
+   ========================================================= */
+
+async function refreshAll(
+  askForToken = false
+) {
+
+  document.getElementById(
+    'lastUpdate'
+  ).textContent =
+    'Refreshing…';
+
 
   await Promise.all([
-    loadStats(askForToken),
+
+    loadStats(
+      askForToken
+    ),
+
     loadConfig(),
-    loadLicenses(askForToken),
-    loadDownloads(askForToken)
+
+    loadLicenses(
+      askForToken
+    ),
+
+    loadDownloads(
+      askForToken
+    )
+
   ]);
 
-  document.getElementById('lastUpdate').textContent =
-    'Updated ' + new Date().toLocaleString();
+
+  document.getElementById(
+    'lastUpdate'
+  ).textContent =
+    'Updated ' +
+    new Date().toLocaleString();
+
 }
 
+
+/* =========================================================
+   START
+   ========================================================= */
+
 refreshAll(false);
-setInterval(() => refreshAll(false), 10000);
+
+
+/* =========================================================
+   AUTO REFRESH EVERY 10 SECONDS
+   ========================================================= */
+
+setInterval(
+  () => refreshAll(false),
+  10000
+);
+
 </script>
+
 </body>
 </html>
