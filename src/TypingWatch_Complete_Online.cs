@@ -350,12 +350,33 @@ class TypingWatch : Form
                 TimeSpan newOverall=f.Value;
                 TimeSpan oldOverall=hindiTotal+englishTotal;
                 TimeSpan delta=newOverall-oldOverall;
-                // Preserve the two language counters. Apply manual overall correction
-                // to the currently selected language; if none is selected, Hindi is used.
-                if(lastTypingLanguage==TypingLanguage.English) englishTotal+=delta;
-                else hindiTotal+=delta;
-                if(englishTotal<TimeSpan.Zero) englishTotal=TimeSpan.Zero;
-                if(hindiTotal<TimeSpan.Zero) hindiTotal=TimeSpan.Zero;
+                // Preserve language totals when increasing; when decreasing, subtract
+                // from the selected language first, then the other so the entered total is exact.
+                if(delta>=TimeSpan.Zero)
+                {
+                    if(lastTypingLanguage==TypingLanguage.English) englishTotal+=delta;
+                    else hindiTotal+=delta;
+                }
+                else
+                {
+                    TimeSpan reduction=TimeSpan.FromTicks(-delta.Ticks);
+                    if(lastTypingLanguage==TypingLanguage.English)
+                    {
+                        TimeSpan take=reduction<=englishTotal?reduction:englishTotal;
+                        englishTotal-=take;
+                        reduction-=take;
+                        if(reduction>TimeSpan.Zero) hindiTotal-=reduction;
+                    }
+                    else
+                    {
+                        TimeSpan take=reduction<=hindiTotal?reduction:hindiTotal;
+                        hindiTotal-=take;
+                        reduction-=take;
+                        if(reduction>TimeSpan.Zero) englishTotal-=reduction;
+                    }
+                    if(englishTotal<TimeSpan.Zero) englishTotal=TimeSpan.Zero;
+                    if(hindiTotal<TimeSpan.Zero) hindiTotal=TimeSpan.Zero;
+                }
                 SaveData();
                 UpdateWatch();
             }
