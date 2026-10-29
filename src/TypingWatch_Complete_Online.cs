@@ -306,6 +306,27 @@ class TypingWatch : Form
             string[] a=File.ReadAllLines(englishDayFile);
             if(a.Length>=2 && a[0]==date && double.TryParse(a[1],out x)) englishToday=TimeSpan.FromSeconds(x);
         }
+
+        // Migrate counters from older builds that stored one combined total.dat file.
+        // Do this only when neither language-specific total exists, to avoid double counting.
+        if(!File.Exists(hindiTotalFile) && !File.Exists(englishTotalFile) && File.Exists(totalFile))
+        {
+            if(double.TryParse(File.ReadAllText(totalFile),System.Globalization.NumberStyles.Any,System.Globalization.CultureInfo.InvariantCulture,out x))
+            {
+                hindiTotal=TimeSpan.FromSeconds(Math.Max(0,x));
+                try { File.WriteAllText(hindiTotalFile,hindiTotal.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)); } catch { }
+            }
+        }
+        // Migrate today's combined counter when the language-specific day files are not present.
+        if(!File.Exists(hindiDayFile) && !File.Exists(englishDayFile) && File.Exists(dayFile))
+        {
+            string[] legacy=File.ReadAllLines(dayFile);
+            if(legacy.Length>=2 && legacy[0]==date && double.TryParse(legacy[1],System.Globalization.NumberStyles.Any,System.Globalization.CultureInfo.InvariantCulture,out x))
+            {
+                hindiToday=TimeSpan.FromSeconds(Math.Max(0,x));
+                try { File.WriteAllLines(hindiDayFile,new string[]{date,hindiToday.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}); } catch { }
+            }
+        }
         total=hindiTotal+englishTotal;
         today=hindiToday+englishToday;
     }
