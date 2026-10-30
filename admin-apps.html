@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Typing Watch — Apps Manager</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#1f2937;font-family:Arial,Helvetica,sans-serif}.wrap{max-width:1200px;margin:auto;padding:20px}.head,.panel{background:#fff;border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 2px 9px rgba(0,0,0,.08)}.head{background:#111827;color:#fff}.head h1{margin:0 0 6px}.head p{margin:0;color:#cbd5e1}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}label{display:block;font-weight:700;font-size:14px}input,select,textarea{width:100%;margin-top:6px;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}textarea{min-height:90px;resize:vertical}button{border:0;border-radius:8px;padding:10px 15px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer;margin:5px 5px 5px 0}button.green{background:#15803d}button.red{background:#dc2626}button.gray{background:#475569}.msg{display:none;margin-top:10px;padding:10px;border-radius:8px}.msg.show{display:block}.ok{background:#dcfce7;color:#166534}.err{background:#fee2e2;color:#991b1b}.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px}th{background:#f8fafc}.pill{display:inline-block;border-radius:20px;padding:4px 8px;font-size:11px;font-weight:800}.on{background:#dcfce7;color:#166534}.off{background:#fee2e2;color:#991b1b}.edit{background:#dbeafe;color:#1d4ed8;border:0;border-radius:6px;padding:6px 9px;font-weight:700}.del{background:#fee2e2;color:#b91c1c;border:0;border-radius:6px;padding:6px 9px;font-weight:700}@media(max-width:750px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="head"><h1>⚙️ Website Apps Manager</h1><p>Customer website पर दिखने वाले apps को यहाँ manage करें।</p></div>
+<div class="panel">
+<h2>🔐 Admin Authentication</h2>
+<label>ADMIN KEY<input id="adminKey" type="password" placeholder="Enter ADMIN_KEY"></label>
+<button onclick="saveKey()">Save Key</button><button class="gray" onclick="clearKey()">Clear</button><button class="green" onclick="loadApps()">Test & Load Apps</button>
+<div id="authMsg" class="msg"></div>
+</div>
+<div class="panel">
+<h2>➕ Add / Edit App</h2>
+<input id="editId" type="hidden">
+<div class="grid">
+<label>App Name<input id="name" placeholder="TypingWatch"></label>
+<label>Platform<select id="platform"><option>WINDOWS</option><option>ANDROID</option><option>WEB</option><option>FUTURE</option><option>OTHER</option></select></label>
+<label>Status<select id="status"><option>Active</option><option>Coming Soon</option><option>Hidden</option></select></label>
+<label>Sort Order<input id="sortOrder" type="number" value="10" step="1"></label>
+<label>Icon<input id="icon" placeholder="⌚"></label>
+<label>Download URL<input id="url" placeholder="https://..."></label>
+<label style="grid-column:1/-1">Description<textarea id="description" placeholder="App description for customers..."></textarea></label>
+</div>
+<button class="green" onclick="saveApp()">Save App</button><button class="gray" onclick="resetForm()">Clear Form</button>
+<div id="saveMsg" class="msg"></div>
+</div>
+<div class="panel">
+<h2>📱 Managed Apps</h2>
+<button onclick="loadApps()">Refresh</button>
+<div class="table"><table><thead><tr><th>Name</th><th>Platform</th><th>Description</th><th>Status</th><th>Order</th><th>Download</th><th>Actions</th></tr></thead><tbody id="appsBody"><tr><td colspan="7">Admin key required</td></tr></tbody></table></div>
+</div>
+</div>
+<script>
+const API='https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec';
+let cbn=0,apps=[];
+function key(){return sessionStorage.getItem('tw_admin_key')||''}
+function saveKey(){sessionStorage.setItem('tw_admin_key',document.getElementById('adminKey').value.trim());show('authMsg','Key saved. Testing...','ok');loadApps()}
+function clearKey(){sessionStorage.removeItem('tw_admin_key');document.getElementById('adminKey').value='';document.getElementById('appsBody').innerHTML='<tr><td colspan="7">Admin key required</td></tr>';show('authMsg','Key cleared.','ok')}
+function show(id,text,type){const e=document.getElementById(id);e.textContent=text;e.className='msg show '+type}
+function jsonp(p){return new Promise((resolve,reject)=>{const n='twApps_'+Date.now()+'_'+(++cbn),s=document.createElement('script');let done=false;const t=setTimeout(()=>{if(done)return;done=true;cleanup();reject(new Error('Request timeout'))},15000);function cleanup(){clearTimeout(t);s.remove();try{delete window[n]}catch(e){window[n]=undefined}}window[n]=d=>{if(done)return;done=true;cleanup();resolve(d)};Object.keys(p).forEach(k=>{if(p[k]!==undefined&&p[k]!==null)p[k]=String(p[k])});p.callback=n;p._=Date.now();s.src=API+'?'+new URLSearchParams(p).toString();s.onerror=()=>{if(done)return;done=true;cleanup();reject(new Error('Network error'))};document.body.appendChild(s)})}
+async function call(op,data){const r=await jsonp(Object.assign({action:'admin',op:op,token:key()},data||{}));if(!r||r.ok===false)throw new Error(r&&r.error||'Request failed');return r}
+async function loadApps(){try{const r=await call('apps',{mode:'list'});apps=r.apps||r.data||[];render();show('authMsg','Connected. Apps loaded: '+apps.length,'ok')}catch(e){show('authMsg',e.message,'err')}}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function render(){const b=document.getElementById('appsBody');if(!apps.length){b.innerHTML='<tr><td colspan="7">No apps found.</td></tr>';return}b.innerHTML=apps.map((a,i)=>'<tr><td><b>'+esc(a.name)+'</b><br>'+esc(a.icon||'')+'</td><td>'+esc(a.platform)+'</td><td>'+esc(a.description)+'</td><td><span class="pill '+(String(a.status).toLowerCase()==='active'?'on':'off')+'">'+esc(a.status)+'</span></td><td>'+esc(a.sortOrder)+'</td><td>'+(a.downloadUrl?'<a href="'+esc(a.downloadUrl)+'" target="_blank" rel="noopener">Open</a>':'—')+'</td><td><button class="edit" onclick="editApp('+i+')">Edit</button> <button class="del" onclick="deleteApp('+i+')">Delete</button></td></tr>').join('')}
+function editApp(i){const a=apps[i];document.getElementById('editId').value=a.id||'';document.getElementById('name').value=a.name||'';document.getElementById('platform').value=a.platform||'WINDOWS';document.getElementById('status').value=a.status||'Active';document.getElementById('sortOrder').value=a.sortOrder??10;document.getElementById('icon').value=a.icon||'';document.getElementById('url').value=a.downloadUrl||'';document.getElementById('description').value=a.description||'';window.scrollTo({top:document.querySelector('.panel:nth-of-type(2)').offsetTop-10,behavior:'smooth'})}
+function resetForm(){['editId','name','icon','url','description'].forEach(id=>document.getElementById(id).value='');document.getElementById('platform').value='WINDOWS';document.getElementById('status').value='Active';document.getElementById('sortOrder').value=10}
+async function saveApp(){try{const data={id:document.getElementById('editId').value,name:document.getElementById('name').value.trim(),platform:document.getElementById('platform').value,status:document.getElementById('status').value,sortOrder:document.getElementById('sortOrder').value,icon:document.getElementById('icon').value.trim(),downloadUrl:document.getElementById('url').value.trim(),description:document.getElementById('description').value.trim()};if(!data.name)throw new Error('App name is required');await call('apps_save',data);show('saveMsg','App saved successfully.','ok');resetForm();loadApps()}catch(e){show('saveMsg',e.message,'err')}}
+async function deleteApp(i){const a=apps[i];if(!confirm('Delete '+(a.name||'this app')+'?'))return;try{await call('apps_delete',{id:a.id});show('authMsg','App deleted.','ok');loadApps()}catch(e){show('authMsg',e.message,'err')}}
+(function(){const k=key();if(k)document.getElementById('adminKey').value=k})()
+</script>
+</body>
+</html>
