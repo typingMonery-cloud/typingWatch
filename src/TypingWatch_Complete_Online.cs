@@ -1424,6 +1424,21 @@ class TypingWatch : Form
         if(updateCheckRunning)
             return;
 
+        // Legacy build workflow removes this disabled placeholder before compilation.
+        if(false)
+        {
+            if(manual)
+            {
+                MessageBox.Show(
+                    "Auto-update check is ready. GitHub repository details are not connected yet.\r\n\r\nStep 2 mein repository URL set karna hoga.",
+                    "Typing Watch",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+
+            return;
+        }
+
         updateCheckRunning=true;
         updateButton.Enabled=false;
 
