@@ -1,11 +1,7 @@
 name: Build TypingWatch Update Fix
 
 on:
-  push:
-    paths:
-      - 'version.json'
-      - 'src/TypingWatch_Complete_Online.cs'
-      - '.github/workflows/build-update-fix.yml'
+  workflow_dispatch:
   workflow_dispatch:
 
 permissions:
