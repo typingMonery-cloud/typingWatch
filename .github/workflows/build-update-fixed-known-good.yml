@@ -31,63 +31,63 @@ jobs:
           # Keep the existing application and backend connections untouched.
           # Replace only the disconnected updater check with a version.json check.
           $pattern='(?s)    void CheckForUpdates\(bool manual\)\s*\{.*?\n    \}\s*\n\n    string ExtractJsonValue'
-          $replacement=@'
-              void CheckForUpdates(bool manual)
-              {
-                  if(updateCheckRunning) return;
-                  updateCheckRunning=true;
-                  updateButton.Enabled=false;
-                  ThreadPool.QueueUserWorkItem(delegate
-                  {
-                      try
-                      {
-                          ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;
-                          string manifestUrl="https://raw.githubusercontent.com/typingMonery-cloud/typingWatch/rebuild-clean-test/version.json";
-                          string json;
-                          using(WebClient wc=new WebClient())
-                          {
-                              wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch-Updater/"+AppVersion;
-                              json=wc.DownloadString(manifestUrl);
-                          }
-                          string tag=ExtractJsonValue(json,"tag_name");
-                          if(String.IsNullOrWhiteSpace(tag)) tag=ExtractJsonValue(json,"version");
-                          string downloadUrl=ExtractJsonValue(json,"download_url");
-                          if(String.IsNullOrWhiteSpace(downloadUrl))
-                              downloadUrl="https://github.com/typingMonery-cloud/typingWatch/raw/refs/heads/rebuild-clean-test/TypingWatch.exe";
-                          bool newer=IsNewerVersion(tag,AppVersion);
-                          BeginInvoke((MethodInvoker)delegate
-                          {
-                              updateCheckRunning=false;
-                              updateButton.Enabled=true;
-                              if(newer)
-                              {
-                                  DialogResult dr=MessageBox.Show(
-                                      "New TypingWatch version available: "+tag+"\r\nCurrent: "+AppVersion+
-                                      "\r\n\r\nDownload the updated EXE?",
-                                      "Update Available",MessageBoxButtons.YesNo,MessageBoxIcon.Information);
-                                  if(dr==DialogResult.Yes)
-                                      Process.Start(new ProcessStartInfo(downloadUrl){UseShellExecute=true});
-                              }
-                              else if(manual)
-                                  MessageBox.Show("Latest version installed hai ("+AppVersion+").",
-                                      "Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Information);
-                          });
-                      }
-                      catch(Exception ex)
-                      {
-                          BeginInvoke((MethodInvoker)delegate
-                          {
-                              updateCheckRunning=false;
-                              updateButton.Enabled=true;
-                              if(manual) MessageBox.Show("Update check failed.\\r\\n\\r\\n"+ex.Message,
-                                  "Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Warning);
-                          });
-                      }
-                  });
-              }
-
-              string ExtractJsonValue
-'@
+          $replacement = [string]::Join("`r`n", @(
+              '              void CheckForUpdates(bool manual)',
+              '              {',
+              '                  if(updateCheckRunning) return;',
+              '                  updateCheckRunning=true;',
+              '                  updateButton.Enabled=false;',
+              '                  ThreadPool.QueueUserWorkItem(delegate',
+              '                  {',
+              '                      try',
+              '                      {',
+              '                          ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;',
+              '                          string manifestUrl="https://raw.githubusercontent.com/typingMonery-cloud/typingWatch/rebuild-clean-test/version.json";',
+              '                          string json;',
+              '                          using(WebClient wc=new WebClient())',
+              '                          {',
+              '                              wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch-Updater/"+AppVersion;',
+              '                              json=wc.DownloadString(manifestUrl);',
+              '                          }',
+              '                          string tag=ExtractJsonValue(json,"tag_name");',
+              '                          if(String.IsNullOrWhiteSpace(tag)) tag=ExtractJsonValue(json,"version");',
+              '                          string downloadUrl=ExtractJsonValue(json,"download_url");',
+              '                          if(String.IsNullOrWhiteSpace(downloadUrl))',
+              '                              downloadUrl="https://github.com/typingMonery-cloud/typingWatch/raw/refs/heads/rebuild-clean-test/TypingWatch.exe";',
+              '                          bool newer=IsNewerVersion(tag,AppVersion);',
+              '                          BeginInvoke((MethodInvoker)delegate',
+              '                          {',
+              '                              updateCheckRunning=false;',
+              '                              updateButton.Enabled=true;',
+              '                              if(newer)',
+              '                              {',
+              '                                  DialogResult dr=MessageBox.Show(',
+              '                                      "New TypingWatch version available: "+tag+"\r\nCurrent: "+AppVersion+',
+              '                                      "\r\n\r\nDownload the updated EXE?",',
+              '                                      "Update Available",MessageBoxButtons.YesNo,MessageBoxIcon.Information);',
+              '                                  if(dr==DialogResult.Yes)',
+              '                                      Process.Start(new ProcessStartInfo(downloadUrl){UseShellExecute=true});',
+              '                              }',
+              '                              else if(manual)',
+              '                                  MessageBox.Show("Latest version installed hai ("+AppVersion+").",',
+              '                                      "Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Information);',
+              '                          });',
+              '                      }',
+              '                      catch(Exception ex)',
+              '                      {',
+              '                          BeginInvoke((MethodInvoker)delegate',
+              '                          {',
+              '                              updateCheckRunning=false;',
+              '                              updateButton.Enabled=true;',
+              '                              if(manual) MessageBox.Show("Update check failed.\\r\\n\\r\\n"+ex.Message,',
+              '                                  "Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Warning);',
+              '                          });',
+              '                      }',
+              '                  });',
+              '              }',
+              '',
+              '              string ExtractJsonValue'
+          ))
           $updated=[regex]::Replace($code,$pattern,$replacement,1)
           if($updated -eq $code) { throw 'Updater method replacement did not match; refusing to build.' }
           $code=$updated
