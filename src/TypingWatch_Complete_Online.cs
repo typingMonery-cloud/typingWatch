@@ -111,7 +111,7 @@ class TypingWatch : Form
     const string OnlineServerUrl =
         "https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec";
 
-    const string AppVersion = "1.0.4";
+    const string AppVersion = "1.0.9";
 
     const string UpdateOwner = "typingMonery-cloud";
     const string UpdateRepository = "typingWatch";
@@ -121,8 +121,7 @@ class TypingWatch : Form
     string onlineUserId="";
     int onlineUsers=0;
 
-    string announcement=
-        "Internet se information load ho rahi hai...";
+    string announcement="";
 
     DateTime nextOnlineSync=DateTime.MinValue;
 
@@ -175,7 +174,7 @@ class TypingWatch : Form
         englishDayFile=Path.Combine(
             folder,"english-today.dat");
 
-        Text="Typing Watch";
+        Text="Typing Watch | Online: --";
         ClientSize=new Size(340,585);
 
         FormBorderStyle=FormBorderStyle.FixedToolWindow;
@@ -382,7 +381,7 @@ class TypingWatch : Form
             ContentAlignment.MiddleCenter;
 
         announcementLabel.Text=
-            "ðŸ“¢ "+announcement;
+            "Announcement: No announcement";
 
         announcementLabel.AutoEllipsis=true;
 
@@ -407,6 +406,8 @@ class TypingWatch : Form
         onlineUsersLabel.Text=
             "Online: --";
 
+        // Keep the live count in the native title bar, not over the speed meter.
+        onlineUsersLabel.Visible=false;
         Controls.Add(onlineUsersLabel);
 
         LoadData();
@@ -1324,7 +1325,8 @@ class TypingWatch : Form
                             string stats=
                                 wc.DownloadString(
                                     OnlineServerUrl+
-                                    "?action=stats");
+                                    "?action=stats&_="+
+                                    DateTime.UtcNow.Ticks);
 
                             int n;
 
@@ -1332,6 +1334,9 @@ class TypingWatch : Form
                                 ExtractJsonValue(
                                     stats,
                                     "liveUsers");
+
+                            if(String.IsNullOrEmpty(live))
+                                live=ExtractJsonValue(stats,"onlineUsers");
 
                             if(int.TryParse(
                                 live,
@@ -1346,6 +1351,10 @@ class TypingWatch : Form
                                         onlineUsersLabel.Text=
                                             "Online: "+
                                             onlineUsers;
+
+                                        Text=
+                                            "Typing Watch | Online: "+
+                                            onlineUsers;
                                     });
                             }
                         }
@@ -1358,25 +1367,23 @@ class TypingWatch : Form
                             string config=
                                 wc.DownloadString(
                                     OnlineServerUrl+
-                                    "?action=config");
+                                    "?action=config&_="+
+                                    DateTime.UtcNow.Ticks);
 
                             string msg=
                                 ExtractJsonValue(
                                     config,
                                     "information");
 
-                            if(!String.IsNullOrEmpty(msg))
-                            {
-                                BeginInvoke(
-                                    (MethodInvoker)delegate
-                                    {
-                                        announcement=msg;
-
-                                        announcementLabel.Text=
-                                            "ðŸ“¢ "+
-                                            announcement;
-                                    });
-                            }
+                            BeginInvoke(
+                                (MethodInvoker)delegate
+                                {
+                                    announcement=msg;
+                                    announcementLabel.Text=
+                                        String.IsNullOrWhiteSpace(msg)
+                                        ? "Announcement: No announcement"
+                                        : "Announcement: "+msg;
+                                });
                         }
                         catch
                         {
@@ -1416,20 +1423,6 @@ class TypingWatch : Form
     {
         if(updateCheckRunning)
             return;
-
-        if(false)
-        {
-            if(manual)
-            {
-                MessageBox.Show(
-                    "Auto-update check is ready. GitHub repository details are not connected yet.\r\n\r\nStep 2 mein repository URL set karna hoga.",
-                    "Typing Watch",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-            }
-
-            return;
-        }
 
         updateCheckRunning=true;
         updateButton.Enabled=false;
