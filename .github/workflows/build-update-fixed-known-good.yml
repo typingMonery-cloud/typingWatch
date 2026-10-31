@@ -30,7 +30,7 @@ jobs:
 
           # Keep the existing application and backend connections untouched.
           # Replace only the disconnected updater check with a version.json check.
-          $pattern='(?s)    void CheckForUpdates\(bool manual\)\s*\{.*?\n    \}\s*\n\n    string ExtractJsonValue'
+          $pattern='(?s)void CheckForUpdates\(bool manual\).*?string ExtractJsonValue'
           $replacement = [string]::Join("`r`n", @(
               '              void CheckForUpdates(bool manual)',
               '              {',
