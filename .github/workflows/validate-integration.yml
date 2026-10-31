@@ -33,7 +33,7 @@ jobs:
             ['backend stats route', /action === 'stats'/.test(backend)],
             ['backend config route', /action === 'config'/.test(backend)],
             ['backend chat routes', /action === 'chat'/.test(backend) && /action === 'chatsend'/.test(backend)],
-            ['admin reads backend stats and config', /action:'stats'/.test(admin) && /action:'config'/.test(admin)],
+            ['admin reads backend stats and config', /read\('stats'\)/.test(admin) && /read\('config'\)/.test(admin)],
             ['admin writes use protected admin operation', /action:'admin'/.test(admin) && /token:k/.test(admin) && /adminKey:k/.test(admin)],
             ['desktop app heartbeat', /\\"action\\":\\"heartbeat\\"/.test(app)],
             ['desktop app reads stats', /\?action=stats/.test(app)],
