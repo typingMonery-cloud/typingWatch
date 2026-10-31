@@ -36,33 +36,11 @@ jobs:
           $text = $text.Replace('if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(30); SyncOnlineNow(); }', 'if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(5); SyncOnlineNow(); }')
           $text = $text.Replace('nextOnlineSync=DateTime.Now.AddSeconds(30);', 'nextOnlineSync=DateTime.Now.AddSeconds(5);')
 
-          # Remove the old placeholder check that caused the manual update dialog.
-          $guardPattern = '(?s)\s*if\(UpdateOwner==\s*"YOUR-GITHUB-USERNAME"\)\s*\{.*?return;\s*\}\s*\}'
-          $replacementLines = @(
-            '        if(String.IsNullOrWhiteSpace(UpdateOwner) ||',
-            '           String.IsNullOrWhiteSpace(UpdateRepository))',
-            '        {',
-            '            if(manual)',
-            '            {',
-            '                MessageBox.Show(',
-            '                    "GitHub update repository is not configured.",',
-            '                    "Typing Watch",',
-            '                    MessageBoxButtons.OK,',
-            '                    MessageBoxIcon.Warning);',
-            '            }',
-            '',
-            '            return;',
-            '        }'
-          )
-          $guardReplacement = $replacementLines -join [Environment]::NewLine
-          $updatedText = [regex]::Replace($text, $guardPattern, [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $guardReplacement }, 1)
-
-          if ($text -match 'YOUR-GITHUB-USERNAME' -and $updatedText -match 'YOUR-GITHUB-USERNAME') {
-            throw 'The old GitHub placeholder guard could not be removed.'
-          }
-          $text = $updatedText
-          if ($text -match 'YOUR-GITHUB-USERNAME') {
-            throw 'The old GitHub placeholder is still present after patching.'
+          # FIX: disable the obsolete placeholder guard. The real repository
+          # is already configured by UpdateOwner and UpdateRepository.
+          $text = [regex]::Replace($text, 'if\(UpdateOwner==\s*"YOUR-GITHUB-USERNAME"\)', 'if(false)', 1)
+          if ($text -match 'if\(UpdateOwner==\s*"YOUR-GITHUB-USERNAME"\)') {
+            throw 'The obsolete GitHub placeholder guard is still present.'
           }
 
           $newPayload = '                    string payload="{\"action\":\"heartbeat\",\"userId\":\""+onlineUserId+"\",\"typing\":\""+(typing?"true":"false")+"\",\"language\":\""+language+"\",\"wpm\":"+((int)Math.Round(displayedWpm))+",\"version\":\""+AppVersion+"\"}";'
@@ -70,6 +48,10 @@ jobs:
           $text = $text.Replace('https://api.github.com/repos/'+"typingMonery-cloud"+'/'+"typingWatch"+'/releases/latest', 'https://raw.githubusercontent.com/typingMonery-cloud/typingWatch/main/version.json')
           $text = $text.Replace('        Application.Run(new TypingWatch());', '        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException); Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e) { try { File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TypingWatch", "errors.log"), DateTime.Now.ToString("o")+" | UI | "+e.Exception+Environment.NewLine); } catch { } }; Application.Run(new TypingWatch());')
           $text = $text.Replace('        if(now.Second%5==0) SaveData();', '        if(now.Second%5==0) { try { SaveData(); } catch { } }')
+
+          # Save the fixed source back to the repository workspace so the
+          # repository source and the built EXE stay in sync.
+          Set-Content -LiteralPath $source -Value $text -Encoding UTF8
           Set-Content -LiteralPath $patched -Value $text -Encoding UTF8
 
           $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
