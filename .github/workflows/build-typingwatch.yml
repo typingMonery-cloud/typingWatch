@@ -29,7 +29,13 @@ jobs:
           $patched = Join-Path $env:GITHUB_WORKSPACE 'src\TypingWatch_Complete_Online_Build.cs'
           if (-not (Test-Path $source)) { throw 'Source C# file was not found.' }
 
-          $text = Get-Content -LiteralPath $source -Raw
+          # The previous build wrote the source with the Windows PowerShell
+          # default encoding and corrupted Hindi/emoji characters. Restore the
+          # clean source from the parent commit before applying the update fix.
+          git checkout HEAD^ -- src/TypingWatch_Complete_Online.cs
+
+          $utf8 = New-Object System.Text.UTF8Encoding($false)
+          $text = [System.IO.File]::ReadAllText($source, $utf8)
 
           $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.3";')
           $text = $text.Replace('const string AppVersion = "1.0.2";', 'const string AppVersion = "1.0.3";')
@@ -49,10 +55,8 @@ jobs:
           $text = $text.Replace('        Application.Run(new TypingWatch());', '        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException); Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e) { try { File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TypingWatch", "errors.log"), DateTime.Now.ToString("o")+" | UI | "+e.Exception+Environment.NewLine); } catch { } }; Application.Run(new TypingWatch());')
           $text = $text.Replace('        if(now.Second%5==0) SaveData();', '        if(now.Second%5==0) { try { SaveData(); } catch { } }')
 
-          # Save the fixed source back to the repository workspace so the
-          # repository source and the built EXE stay in sync.
-          Set-Content -LiteralPath $source -Value $text -Encoding UTF8
-          Set-Content -LiteralPath $patched -Value $text -Encoding UTF8
+          [System.IO.File]::WriteAllText($source, $text, $utf8)
+          [System.IO.File]::WriteAllText($patched, $text, $utf8)
 
           $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
           if (-not (Test-Path $csc)) { $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe' }
