@@ -1,0 +1,74 @@
+name: Build TypingWatch Update Fix v2
+
+on:
+  push:
+    paths:
+      - 'version.json'
+      - 'src/TypingWatch_Complete_Online.cs'
+      - '.github/workflows/build-update-fix-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout current source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build updater-fixed EXE
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $source='src\TypingWatch_Complete_Online.cs'
+          $build='TypingWatch_Build.cs'
+          $utf8=New-Object System.Text.UTF8Encoding($false)
+          $text=[System.IO.File]::ReadAllText($source,$utf8)
+
+          # Remove only the old disabled placeholder branch.
+          $pattern='(?s)\s*if\(false\)\s*\{\s*if\(manual\)\s*\{.*?\}\s*return;\s*\}\s*'
+          $newText=[regex]::Replace($text,$pattern,"`r`n",1)
+
+          if($newText -eq $text) { throw 'Old updater placeholder branch was not found.' }
+
+          [System.IO.File]::WriteAllText($build,$newText,$utf8)
+
+          $csc=Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe'
+          if(-not (Test-Path $csc)) { throw 'x86 C# compiler not found.' }
+
+          & $csc /nologo /target:winexe /platform:x86 /out:TypingWatch.exe /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll $build
+          if($LASTEXITCODE -ne 0) { throw 'C# compilation failed.' }
+          if(-not (Test-Path 'TypingWatch.exe')) { throw 'TypingWatch.exe was not created.' }
+          if((Get-Item 'TypingWatch.exe').Length -le 0) { throw 'EXE is empty.' }
+
+      - name: Startup smoke test
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $p=Start-Process -FilePath (Join-Path $env:GITHUB_WORKSPACE 'TypingWatch.exe') -PassThru
+          Start-Sleep -Seconds 10
+          if($p.HasExited) { throw "TypingWatch exited during startup test. ExitCode=$($p.ExitCode)" }
+          Stop-Process -Id $p.Id -Force
+
+      - name: Upload fixed EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: TypingWatch-Update-Fixed-x86-v2
+          path: TypingWatch.exe
+          if-no-files-found: error
+
+      - name: Publish fixed EXE
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add TypingWatch.exe
+          if(-not (git diff --cached --quiet)) {
+            git commit -m 'Publish updater-fixed TypingWatch EXE v2 [skip ci]'
+            git push
+          }
