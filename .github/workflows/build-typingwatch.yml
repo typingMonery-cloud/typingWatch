@@ -21,19 +21,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Prepare source for version 1.0.8
+      - name: Verify source version
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           $source = Join-Path $env:GITHUB_WORKSPACE 'src\TypingWatch_Complete_Online.cs'
           if (-not (Test-Path $source)) { throw 'Source C# file was not found.' }
-          $utf8 = New-Object System.Text.UTF8Encoding($false)
-          $text = [System.IO.File]::ReadAllText($source, $utf8)
-          $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.8";')
-          $text = $text.Replace('const string AppVersion = "1.0.2";', 'const string AppVersion = "1.0.8";')
-          $text = $text.Replace('const string AppVersion = "1.0.3";', 'const string AppVersion = "1.0.8";')
-          $text = $text.Replace('const string AppVersion = "1.0.4";', 'const string AppVersion = "1.0.8";')
-          [System.IO.File]::WriteAllText($source, $text, $utf8)
+          $text = [System.IO.File]::ReadAllText($source)
+          if ($text -notmatch 'const string AppVersion = "1\.0\.10";') { throw 'Source version must be 1.0.10.' }
 
       - name: Compile x86 Windows Forms EXE
         shell: powershell
@@ -49,7 +44,7 @@ jobs:
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TypingWatch-Windows-EXE-1.0.8
+          name: TypingWatch-Windows-EXE-1.0.10
           path: TypingWatch.exe
           if-no-files-found: error
 
@@ -61,6 +56,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add TypingWatch.exe
           if (-not (git diff --cached --quiet)) {
-            git commit -m "Build Typing Watch 1.0.8 [skip ci]"
-            git push
+            git commit -m "Build Typing Watch 1.0.10 [skip ci]"
+            git pull --rebase origin $env:GITHUB_REF_NAME
+            git push origin HEAD:$env:GITHUB_REF_NAME
           }
