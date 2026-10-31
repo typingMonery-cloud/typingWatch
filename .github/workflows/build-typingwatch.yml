@@ -31,38 +31,34 @@ jobs:
 
           $text = Get-Content -LiteralPath $source -Raw
 
-          # Keep the current application version when the source already has it.
           $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.3";')
           $text = $text.Replace('const string AppVersion = "1.0.2";', 'const string AppVersion = "1.0.3";')
           $text = $text.Replace('if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(30); SyncOnlineNow(); }', 'if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(5); SyncOnlineNow(); }')
           $text = $text.Replace('nextOnlineSync=DateTime.Now.AddSeconds(30);', 'nextOnlineSync=DateTime.Now.AddSeconds(5);')
 
-          # FIX: the old source had a placeholder guard which always showed
-          # "GitHub repository details are not connected yet" even though
-          # UpdateOwner/UpdateRepository are already configured.
-          $guardPattern = '(?s)\s*if\(UpdateOwner==\s*"YOUR-GITHUB-USERNAME"\)\s*\{.*?\n\s*\}\s*\n\s*Thread t=new Thread'
-          $guardReplacement = @'
+          # Remove the old placeholder check that caused the manual update dialog.
+          $guardPattern = '(?s)\s*if\(UpdateOwner==\s*"YOUR-GITHUB-USERNAME"\)\s*\{.*?return;\s*\}\s*\}'
+          $replacementLines = @(
+            '        if(String.IsNullOrWhiteSpace(UpdateOwner) ||',
+            '           String.IsNullOrWhiteSpace(UpdateRepository))',
+            '        {',
+            '            if(manual)',
+            '            {',
+            '                MessageBox.Show(',
+            '                    "GitHub update repository is not configured.",',
+            '                    "Typing Watch",',
+            '                    MessageBoxButtons.OK,',
+            '                    MessageBoxIcon.Warning);',
+            '            }',
+            '',
+            '            return;',
+            '        }'
+          )
+          $guardReplacement = $replacementLines -join [Environment]::NewLine
+          $updatedText = [regex]::Replace($text, $guardPattern, [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $guardReplacement }, 1)
 
-        if(String.IsNullOrWhiteSpace(UpdateOwner) ||
-           String.IsNullOrWhiteSpace(UpdateRepository))
-        {
-            if(manual)
-            {
-                MessageBox.Show(
-                    "GitHub update repository is not configured.",
-                    "Typing Watch",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-            }
-
-            return;
-        }
-
-        Thread t=new Thread
-'@
-          $updatedText = [regex]::Replace($text, $guardPattern, $guardReplacement, 1)
-          if ($updatedText -eq $text -and $text -match 'YOUR-GITHUB-USERNAME') {
-            throw 'The old GitHub placeholder guard was not found; build stopped to avoid producing an unchanged EXE.'
+          if ($text -match 'YOUR-GITHUB-USERNAME' -and $updatedText -match 'YOUR-GITHUB-USERNAME') {
+            throw 'The old GitHub placeholder guard could not be removed.'
           }
           $text = $updatedText
           if ($text -match 'YOUR-GITHUB-USERNAME') {
