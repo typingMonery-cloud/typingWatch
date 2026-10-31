@@ -15,6 +15,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Prepare current online build
+        shell: pwsh
+        run: |
+          $source = 'src\TypingWatch_Complete_Online.cs'
+          $text = Get-Content $source -Raw
+          $text = $text -replace 'const string AppVersion = "1\.0\.4";', 'const string AppVersion = "1.0.8";'
+          Set-Content -Path $source -Value $text -Encoding UTF8
+          Write-Host 'Build source prepared as Typing Watch 1.0.8.'
+
       - name: Compile x86 Windows Forms application
         shell: pwsh
         run: |
@@ -27,7 +36,8 @@ jobs:
           @"
           Typing Watch Windows build
           Architecture: x86
-          Version: 1.0.3
+          Version: 1.0.8
+          Online features: Chat, Announcement, Live Users, Update Check
           Build source: src/TypingWatch_Complete_Online.cs
           "@ | Set-Content -Encoding utf8 dist\README.txt
           Compress-Archive -Path dist\* -DestinationPath TypingWatch-Windows-x86.zip -Force
