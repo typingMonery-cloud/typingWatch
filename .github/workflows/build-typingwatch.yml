@@ -29,23 +29,18 @@ jobs:
           $patched = Join-Path $env:GITHUB_WORKSPACE 'src\TypingWatch_Complete_Online_Build.cs'
           if (-not (Test-Path $source)) { throw 'Source C# file was not found.' }
 
-          # Keep the known-good parent source as the build base. This preserves
-          # the existing Hindi/English tracking, Online Users, Announcement,
-          # License, Live Chat, totals and current UI.
-          git checkout HEAD^ -- src/TypingWatch_Complete_Online.cs
-
+          # IMPORTANT: build the CURRENT repository source.
+          # Do not replace it with HEAD^; that would restore the old updater.
           $utf8 = New-Object System.Text.UTF8Encoding($false)
           $text = [System.IO.File]::ReadAllText($source, $utf8)
 
-          # Only update the version and keep the existing online-sync timing.
           $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.4";')
           $text = $text.Replace('const string AppVersion = "1.0.2";', 'const string AppVersion = "1.0.4";')
           $text = $text.Replace('const string AppVersion = "1.0.3";', 'const string AppVersion = "1.0.4";')
           $text = $text.Replace('if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(30); SyncOnlineNow(); }', 'if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(5); SyncOnlineNow(); }')
           $text = $text.Replace('nextOnlineSync=DateTime.Now.AddSeconds(30);', 'nextOnlineSync=DateTime.Now.AddSeconds(5);')
 
-          # The real repository is already configured by UpdateOwner and
-          # UpdateRepository. Disable only the obsolete placeholder guard.
+          # The real repository is already configured by UpdateOwner and UpdateRepository.
           $text = [regex]::Replace($text, 'if\(UpdateOwner==\s*"YOUR-GITHUB-USERNAME"\)', 'if(false)', 1)
 
           # Keep the known-good heartbeat payload shape.
@@ -54,12 +49,6 @@ jobs:
 
           [System.IO.File]::WriteAllText($source, $text, $utf8)
           [System.IO.File]::WriteAllText($patched, $text, $utf8)
-
-          # Public marker for the fixed build.
-          [System.IO.File]::WriteAllText(
-            (Join-Path $env:GITHUB_WORKSPACE 'version.json'),
-            '{"tag_name":"1.0.4"}' + [Environment]::NewLine,
-            $utf8)
 
           $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
           if (-not (Test-Path $csc)) { $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe' }
@@ -84,14 +73,14 @@ jobs:
           path: dist/TypingWatch.exe
           if-no-files-found: error
 
-      - name: Commit fixed source, version and EXE
+      - name: Commit rebuilt EXE
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/TypingWatch_Complete_Online.cs TypingWatch.exe version.json
+          git add TypingWatch.exe
           if (-not (git diff --cached --quiet)) {
-            git commit -m "Fix TypingWatch auto-update check and publish v1.0.4 [skip ci]"
+            git commit -m "Rebuild TypingWatch from current auto-update source [skip ci]"
             git push
           }
