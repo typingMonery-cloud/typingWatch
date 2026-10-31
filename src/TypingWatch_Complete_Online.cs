@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -302,7 +302,7 @@ class TypingWatch : Form
         Controls.Add(editButton);
 
         dashboardButton.Text=
-            "⚙ Settings Dashboard";
+            "âš™ Settings Dashboard";
 
         dashboardButton.SetBounds(
             7,
@@ -320,7 +320,7 @@ class TypingWatch : Form
         Controls.Add(dashboardButton);
 
         chatButton.Text=
-            "💬 Live Chat";
+            "ðŸ’¬ Live Chat";
 
         chatButton.SetBounds(
             7,
@@ -341,7 +341,7 @@ class TypingWatch : Form
         Controls.Add(chatButton);
 
         updateButton.Text=
-            "↻ Check for Updates";
+            "â†» Check for Updates";
 
         updateButton.SetBounds(
             7,
@@ -382,7 +382,7 @@ class TypingWatch : Form
             ContentAlignment.MiddleCenter;
 
         announcementLabel.Text=
-            "📢 "+announcement;
+            "ðŸ“¢ "+announcement;
 
         announcementLabel.AutoEllipsis=true;
 
@@ -1373,7 +1373,7 @@ class TypingWatch : Form
                                         announcement=msg;
 
                                         announcementLabel.Text=
-                                            "📢 "+
+                                            "ðŸ“¢ "+
                                             announcement;
                                     });
                             }
@@ -1417,8 +1417,7 @@ class TypingWatch : Form
         if(updateCheckRunning)
             return;
 
-        if(UpdateOwner==
-           "YOUR-GITHUB-USERNAME")
+        if(false)
         {
             if(manual)
             {
@@ -1689,7 +1688,7 @@ class TypingWatch : Form
                 Color.Red;
 
             label.Text=
-                "⌨ TYPING WATCH\r\n\r\n"+
+                "âŒ¨ TYPING WATCH\r\n\r\n"+
                 "TRIAL EXPIRED\r\n\r\n"+
                 "WATCH: ON BUT INACTIVE\r\n"+
                 "WPM Meter: LOCKED\r\n"+
@@ -1854,7 +1853,7 @@ class TypingWatch : Form
             remaining=TimeSpan.Zero;
 
         label.Text=
-            "⌨ TYPING WATCH\r\n\r\n"+
+            "âŒ¨ TYPING WATCH\r\n\r\n"+
             "Total: "+Format(total)+"\r\n"+
             "Today: "+Format(today)+"\r\n"+
             "Hindi: "+Format(hindiTotal)+"\r\n"+
@@ -2065,7 +2064,7 @@ class LicenseForm:Form
     public LicenseForm()
     {
         Text=
-            "Typing Watch — License";
+            "Typing Watch â€” License";
 
         Width=500;
         Height=190;
@@ -2182,7 +2181,7 @@ class PaymentForm:Form
     public PaymentForm()
     {
         Text=
-            "Typing Watch — Payment / Buy License";
+            "Typing Watch â€” Payment / Buy License";
 
         Width=650;
         Height=610;
@@ -2234,9 +2233,9 @@ class PaymentForm:Form
         plan.Items.AddRange(
             new object[]
             {
-                "Basic — 4 Months — ₹50",
-                "Standard — 6 Months — ₹60",
-                "Premium — 12 Months — ₹70"
+                "Basic â€” 4 Months â€” â‚¹50",
+                "Standard â€” 6 Months â€” â‚¹60",
+                "Premium â€” 12 Months â€” â‚¹70"
             });
 
         plan.SelectedIndex=1;
@@ -2375,7 +2374,7 @@ class PaymentForm:Form
 
             string selected=
                 plan.SelectedItem==null?
-                "Standard — 6 Months — ₹60":
+                "Standard â€” 6 Months â€” â‚¹60":
                 plan.SelectedItem.ToString();
 
             string body=
@@ -2502,7 +2501,7 @@ class LiveChatForm : Form
         userId=id;
 
         Text=
-            "Typing Watch — Live Chat";
+            "Typing Watch â€” Live Chat";
 
         Width=430;
         Height=520;
@@ -2522,7 +2521,7 @@ class LiveChatForm : Form
             new Label()
             {
                 Text=
-                    "💬 Live Chat — सभी Live Users",
+                    "ðŸ’¬ Live Chat â€” à¤¸à¤­à¥€ Live Users",
                 Left=15,
                 Top=12,
                 Width=380,
@@ -2576,7 +2575,7 @@ class LiveChatForm : Form
             new Label()
             {
                 Text=
-                    "Anonymous user ID • Chat messages are shared with live users",
+                    "Anonymous user ID â€¢ Chat messages are shared with live users",
                 Left=15,
                 Top=425,
                 Width=385,
@@ -2862,7 +2861,7 @@ class SettingsDashboardForm : Form
         Action payment)
     {
         Text=
-            "TypingWatch — Settings Dashboard";
+            "TypingWatch â€” Settings Dashboard";
 
         Size=
             new Size(520,510);
@@ -3692,3 +3691,4 @@ class WarningSettingsForm:Form
         CancelButton=cancel;
     }
 }
+
