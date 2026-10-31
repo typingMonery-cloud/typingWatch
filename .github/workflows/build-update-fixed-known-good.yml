@@ -1,0 +1,71 @@
+name: Build TypingWatch Updater Fixed Known Good
+
+on:
+  push:
+    paths:
+      - 'version.json'
+      - '.github/workflows/build-update-fixed-known-good.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build verified x86 EXE
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $utf8=New-Object System.Text.UTF8Encoding($false)
+          $source='src\TypingWatch_Complete_Online.cs'
+          $startup='src\Startup.cs'
+          $build='TypingWatch_Build.cs'
+          $code=[System.IO.File]::ReadAllText($source,$utf8)
+
+          # Remove the old disconnected repository placeholder block.
+          $pattern='(?s)\s*if\(UpdateOwner==\s*"YOUR-GITHUB-USERNAME"\)\s*\{.*?\}\s*return;\s*\}\s*'
+          $code=[regex]::Replace($code,$pattern,"`r`n",1)
+          $code=$code.Replace('if(UpdateOwner=="YOUR-GITHUB-USERNAME")','if(false)')
+
+          # Keep online/update startup until the WinForms message loop is ready.
+          $pattern2='BeginInvoke\(\(MethodInvoker\)delegate\s*\{\s*StartOnlineSync\(\);\s*CheckForUpdates\(false\);\s*\}\);'
+          $code=[regex]::Replace($code,$pattern2,'Shown+=(s,e)=>{ StartOnlineSync(); CheckForUpdates(false); };',1)
+
+          [System.IO.File]::WriteAllText($build,$code,$utf8)
+
+          $csc=Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe'
+          if(-not (Test-Path $csc)) { throw 'x86 C# compiler not found.' }
+          & $csc /nologo /target:winexe /platform:x86 /main:Startup /optimize+ /out:TypingWatch.exe /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll $build $startup
+          if($LASTEXITCODE -ne 0) { throw 'C# compilation failed.' }
+          if(-not (Test-Path 'TypingWatch.exe')) { throw 'EXE was not created.' }
+          if((Get-Item 'TypingWatch.exe').Length -lt 30000) { throw 'EXE unexpectedly small.' }
+
+      - name: Startup smoke test
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $p=Start-Process -FilePath (Join-Path $env:GITHUB_WORKSPACE 'TypingWatch.exe') -PassThru
+          Start-Sleep -Seconds 10
+          if($p.HasExited) { throw "Startup failed. ExitCode=$($p.ExitCode)" }
+          Stop-Process -Id $p.Id -Force
+
+      - name: Upload verified artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TypingWatch-Update-Fixed-KnownGood
+          path: TypingWatch.exe
+          if-no-files-found: error
+
+      - name: Publish EXE
+        shell: powershell
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add TypingWatch.exe
+          if(-not (git diff --cached --quiet)) { git commit -m 'Publish updater-fixed known-good EXE [skip ci]'; git push }
