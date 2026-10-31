@@ -63,22 +63,35 @@ function doPost(e) {
 }
 
 function doGet(e) {
+  let response;
   try {
-    const action = String((e && e.parameter && e.parameter.action) || 'stats').toLowerCase();
-    if (action === 'health') return json_({ok:true,service:'Typing Watch',serverTime:new Date().toISOString()});
-    if (action === 'stats' || action === 'admin_stats') return stats_();
-    if (action === 'config' || action === 'getconfig') return config_();
-    if (action === 'website_content' || action === 'websitecontent') return websiteContent_();
-    if (action === 'licenses') return licenses_();
-    if (action === 'downloads') return downloads_();
-    if (action === 'chat') return chat_();
-    if (action === 'dashboard' || action === 'dashboard_data') {
+    const params = (e && e.parameter) || {};
+    const action = String(params.action || 'stats').toLowerCase();
+    if (action === 'health') response = json_({ok:true,service:'Typing Watch',serverTime:new Date().toISOString()});
+    else if (action === 'stats' || action === 'admin_stats') response = stats_();
+    else if (action === 'config' || action === 'getconfig') response = config_();
+    else if (action === 'website_content' || action === 'websitecontent') response = websiteContent_();
+    else if (action === 'licenses') response = licenses_();
+    else if (action === 'downloads') response = downloads_();
+    else if (action === 'chat') response = chat_();
+    else if (action === 'dashboard' || action === 'dashboard_data') {
       const stats = statsObject_(); const config = configObject_();
-      return json_({ok:true,success:true,stats:stats,config:config,liveUsers:stats.liveUsers,typingNow:stats.typingNow,downloadCount:config.downloadCount,activeLicenses:licenseCount_()});
-    }
-    if (action === 'check_license' || action === 'checklicense' || action === 'verifylicense') return checkLicense_(e.parameter || {});
-    return json_({ok:false,error:'Unknown action: '+action});
-  } catch (err) { return json_({ok:false,error:String(err)}); }
+      response = json_({ok:true,success:true,stats:stats,config:config,liveUsers:stats.liveUsers,typingNow:stats.typingNow,downloadCount:config.downloadCount,activeLicenses:licenseCount_()});
+    } else if (action === 'check_license' || action === 'checklicense' || action === 'verifylicense') response = checkLicense_(params);
+    else if (action === 'admin') response = admin_(params);
+    else response = json_({ok:false,error:'Unknown action: '+action});
+  } catch (err) {
+    response = json_({ok:false,error:String(err)});
+  }
+
+  // The website and Content Manager use JSONP. Return executable JavaScript
+  // only when a valid callback name was explicitly supplied.
+  const callback = String((e && e.parameter && e.parameter.callback) || '');
+  if (callback && /^[A-Za-z_$][0-9A-Za-z_$.]*$/.test(callback)) {
+    return ContentService.createTextOutput(callback + '(' + response.getContent() + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return response;
 }
 
 function readBody_(e) {
