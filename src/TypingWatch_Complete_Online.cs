@@ -99,6 +99,7 @@ class TypingWatch : Form
     string settingsFile;
     string trialFile;
     string licenseFile;
+    string chatDisplayNameFile;
 
     const string LicenseSalt =
         "TW2026-OWNER-ASHISH-YADAV-CHANGE-BEFORE-RELEASE";
@@ -111,7 +112,7 @@ class TypingWatch : Form
     const string OnlineServerUrl =
         "https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec";
 
-    const string AppVersion = "1.0.9";
+    const string AppVersion = "1.0.10";
 
     const string UpdateOwner = "typingMonery-cloud";
     const string UpdateRepository = "typingWatch";
@@ -159,6 +160,7 @@ class TypingWatch : Form
 
         licenseFile=Path.Combine(
             folder,"license.dat");
+        chatDisplayNameFile=Path.Combine(folder,"chat-display-name.dat");
 
         date=DateTime.Now.ToString("yyyy-MM-dd");
 
@@ -518,25 +520,44 @@ class TypingWatch : Form
 
     void OpenChat()
     {
-        if(!OnlineConfigured() ||
-           String.IsNullOrEmpty(onlineUserId))
+        if(!OnlineConfigured() || String.IsNullOrEmpty(onlineUserId))
         {
-            MessageBox.Show(
-                "Live Chat ke liye online connection zaroori hai.",
-                "Typing Watch",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-
+            MessageBox.Show("Live Chat ke liye online connection zaroori hai.","Typing Watch");
             return;
         }
 
-        using(LiveChatForm f=
-            new LiveChatForm(
-                OnlineServerUrl,
-                onlineUserId))
+        string displayName=LoadChatDisplayName();
+        if(String.IsNullOrWhiteSpace(displayName))
+        {
+            using(ChatNamePromptForm prompt=new ChatNamePromptForm(""))
+            {
+                if(prompt.ShowDialog(this)!=DialogResult.OK) return;
+                displayName=prompt.DisplayName;
+                SaveChatDisplayName(displayName);
+            }
+        }
+
+        using(LiveChatForm f=new LiveChatForm(
+            OnlineServerUrl,onlineUserId,displayName,SaveChatDisplayName))
         {
             f.ShowDialog(this);
         }
+    }
+
+    string LoadChatDisplayName()
+    {
+        try { if(File.Exists(chatDisplayNameFile)) return File.ReadAllText(chatDisplayNameFile).Trim(); }
+        catch {}
+        return "";
+    }
+
+    void SaveChatDisplayName(string name)
+    {
+        string value=(name??"").Trim();
+        if(value.Length>30)value=value.Substring(0,30);
+        if(value.Length==0)return;
+        try { File.WriteAllText(chatDisplayNameFile,value); }
+        catch(Exception ex) { MessageBox.Show("Chat name save nahi ho paya: "+ex.Message); }
     }
 
     void OpenDashboard(object sender,EventArgs e)
@@ -1421,141 +1442,91 @@ class TypingWatch : Form
 
     void CheckForUpdates(bool manual)
     {
-        if(updateCheckRunning)
-            return;
-
-        // Legacy build workflow removes this disabled placeholder before compilation.
-        if(false)
-        {
-            if(manual)
-            {
-                MessageBox.Show(
-                    "Auto-update check is ready. GitHub repository details are not connected yet.\r\n\r\nStep 2 mein repository URL set karna hoga.",
-                    "Typing Watch",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-            }
-
-            return;
-        }
-
+        if(updateCheckRunning || !OnlineConfigured()) return;
         updateCheckRunning=true;
         updateButton.Enabled=false;
-
-        ThreadPool.QueueUserWorkItem(
-            delegate
+        ThreadPool.QueueUserWorkItem(delegate
+        {
+            string latest="", error="";
+            try
             {
-                try
+                ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;
+                string api="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/version.json";
+                using(WebClient wc=new WebClient())
                 {
-                    ServicePointManager.SecurityProtocol=
-                        SecurityProtocolType.Tls12;
-
-                    string api=
-                        "https://raw.githubusercontent.com/"+
-                        UpdateOwner+
-                        "/"+
-                        UpdateRepository+
-                        "/main/version.json";
-
-                    string json;
-
-                    using(WebClient wc=
-                        new WebClient())
-                    {
-                        wc.Headers[
-                            HttpRequestHeader.UserAgent]=
-                            "TypingWatch/"+AppVersion;
-
-                        json=
-                            wc.DownloadString(api);
-                    }
-
-                    string tag=
-                        ExtractJsonValue(
-                            json,
-                            "tag_name");
-
-                    if(String.IsNullOrEmpty(tag))
-                    {
-                        tag=
-                            ExtractJsonValue(
-                                json,
-                                "version");
-                    }
-
-                    string url=
-                        "https://github.com/"+
-                        UpdateOwner+
-                        "/"+
-                        UpdateRepository+
-                        "/releases";
-
-                    bool newer=
-                        IsNewerVersion(
-                            tag,
-                            AppVersion);
-
-                    BeginInvoke(
-                        (MethodInvoker)delegate
-                        {
-                            updateCheckRunning=false;
-                            updateButton.Enabled=true;
-
-                            if(newer)
-                            {
-                                DialogResult dr=
-                                    MessageBox.Show(
-                                        "New Typing Watch version available: "+
-                                        tag+
-                                        "\r\nCurrent: "+
-                                        AppVersion+
-                                        "\r\n\r\nGitHub release page open karein?",
-                                        "Update Available",
-                                        MessageBoxButtons.YesNo,
-                                        MessageBoxIcon.Information);
-
-                                if(dr==DialogResult.Yes &&
-                                   !String.IsNullOrWhiteSpace(url))
-                                {
-                                    Process.Start(
-                                        new ProcessStartInfo(url)
-                                        {
-                                            UseShellExecute=true
-                                        });
-                                }
-                            }
-                            else if(manual)
-                            {
-                                MessageBox.Show(
-                                    "Latest version installed hai ("+
-                                    AppVersion+
-                                    ").",
-                                    "Typing Watch",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Information);
-                            }
-                        });
+                    wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch/"+AppVersion;
+                    wc.CachePolicy=new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
+                    string json=wc.DownloadString(api);
+                    latest=ExtractJsonValue(json,"tag_name");
+                    if(String.IsNullOrWhiteSpace(latest))latest=ExtractJsonValue(json,"version");
                 }
-                catch(Exception ex)
+                if(String.IsNullOrWhiteSpace(latest))throw new Exception("GitHub version.json mein version nahi mila.");
+                bool newer=IsNewerVersion(latest,AppVersion);
+                BeginInvoke((MethodInvoker)delegate
                 {
-                    BeginInvoke(
-                        (MethodInvoker)delegate
-                        {
-                            updateCheckRunning=false;
-                            updateButton.Enabled=true;
+                    updateCheckRunning=false; updateButton.Enabled=true;
+                    if(!newer)
+                    {
+                        if(manual)MessageBox.Show("Latest version installed hai ("+AppVersion+").","Typing Watch");
+                        return;
+                    }
+                    DialogResult answer=MessageBox.Show(
+                        "New Typing Watch version available: "+latest+
+                        "\r\nCurrent: "+AppVersion+
+                        "\r\n\r\nUpdated EXE download karke install karein?",
+                        "Update Available",MessageBoxButtons.YesNo,MessageBoxIcon.Information);
+                    if(answer==DialogResult.Yes)DownloadAndInstallUpdate(latest);
+                });
+            }
+            catch(Exception ex)
+            {
+                error=ex.Message;
+                BeginInvoke((MethodInvoker)delegate
+                {
+                    updateCheckRunning=false; updateButton.Enabled=true;
+                    if(manual)MessageBox.Show("Update check failed.\r\n\r\n"+error,"Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+                });
+            }
+        });
+    }
 
-                            if(manual)
-                            {
-                                MessageBox.Show(
-                                    "Update check failed.\r\n\r\n"+
-                                    ex.Message,
-                                    "Typing Watch",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Warning);
-                            }
-                        });
-                }
-            });
+    void DownloadAndInstallUpdate(string version)
+    {
+        try
+        {
+            string exe=Application.ExecutablePath;
+            string safe=version.Replace(".","_").Replace("/","_");
+            string downloaded=Path.Combine(Path.GetTempPath(),"TypingWatch_update_"+safe+".exe");
+            string script=Path.Combine(Path.GetTempPath(),"TypingWatch_update_"+safe+".cmd");
+            string url="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/TypingWatch.exe";
+            using(WebClient wc=new WebClient())
+            {
+                wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch-Updater/"+AppVersion;
+                wc.DownloadFile(url,downloaded);
+            }
+            FileInfo info=new FileInfo(downloaded);
+            if(!info.Exists||info.Length<20000)throw new Exception("Downloaded EXE file incomplete hai.");
+            using(FileStream fs=File.OpenRead(downloaded))
+                if(fs.ReadByte()!=77||fs.ReadByte()!=90)throw new Exception("Downloaded file valid Windows EXE nahi hai.");
+
+            int pid=Process.GetCurrentProcess().Id;
+            string batch="@echo off\r\n:waitloop\r\n"+
+                "tasklist /FI \"PID eq "+pid+"\" 2>NUL | find \""+pid+"\" >NUL\r\n"+
+                "if not errorlevel 1 (timeout /t 1 /nobreak >NUL & goto waitloop)\r\n"+
+                "copy /y \""+downloaded+"\" \""+exe+"\" >NUL\r\n"+
+                "if errorlevel 1 exit /b 1\r\n"+
+                "start \"\" \""+exe+"\"\r\n"+
+                "del /q \""+downloaded+"\"\r\n"+
+                "del /q \"%~f0\"\r\n";
+            File.WriteAllText(script,batch,Encoding.ASCII);
+            Process.Start(new ProcessStartInfo { FileName="cmd.exe",Arguments="/c \""+script+"\"",CreateNoWindow=true,UseShellExecute=false,WindowStyle=ProcessWindowStyle.Hidden });
+            MessageBox.Show("Update download ho gaya. TypingWatch restart hokar update install karega. Aapka saved typing data safe rahega.","Typing Watch Update");
+            Application.Exit();
+        }
+        catch(Exception ex)
+        {
+            MessageBox.Show("Update install nahi ho paya. Purana TypingWatch safe hai.\r\n\r\n"+ex.Message,"Typing Watch Update",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+        }
     }
 
     string ExtractJsonValue(
@@ -2482,381 +2453,164 @@ class PaymentForm:Form
 // LIVE CHAT
 // ================================================================
 
+class ChatNamePromptForm : Form
+{
+    TextBox nameBox=new TextBox();
+    public string DisplayName { get { return nameBox.Text.Trim(); } }
+    public ChatNamePromptForm(string current)
+    {
+        Text="Typing Watch - Chat Name"; ClientSize=new Size(340,135);
+        FormBorderStyle=FormBorderStyle.FixedDialog; StartPosition=FormStartPosition.CenterParent;
+        MaximizeBox=false; MinimizeBox=false;
+        Label prompt=new Label(); prompt.Text="Chat mein dikhne wala apna naam likhein:"; prompt.SetBounds(12,12,315,24);
+        nameBox.SetBounds(12,42,315,25); nameBox.Text=current;
+        Button save=new Button(); save.Text="Save"; save.SetBounds(160,82,78,28); save.DialogResult=DialogResult.OK;
+        Button cancel=new Button(); cancel.Text="Cancel"; cancel.SetBounds(248,82,78,28); cancel.DialogResult=DialogResult.Cancel;
+        Controls.AddRange(new Control[]{prompt,nameBox,save,cancel}); AcceptButton=save; CancelButton=cancel;
+    }
+}
+
 class LiveChatForm : Form
 {
-    string serverUrl;
-    string userId;
-
-    TextBox input=
-        new TextBox();
-
-    ListBox messages=
-        new ListBox();
-
-    Button send=
-        new Button();
-
-    FormsTimer refreshTimer=
-        new FormsTimer();
-
+    string serverUrl,userId,displayName;
+    Action<string> saveName;
+    TextBox input=new TextBox();
+    ListBox messages=new ListBox();
+    Button send=new Button(),changeName=new Button();
+    FormsTimer refreshTimer=new FormsTimer();
     bool busy=false;
 
-    public LiveChatForm(
-        string url,
-        string id)
+    public LiveChatForm(string url,string id,string name,Action<string> save)
     {
-        serverUrl=url;
-        userId=id;
+        serverUrl=url; userId=id; displayName=name; saveName=save;
+        Text="Typing Watch - Live Chat"; Width=430; Height=520;
+        StartPosition=FormStartPosition.CenterParent; FormBorderStyle=FormBorderStyle.FixedDialog;
+        MaximizeBox=false; MinimizeBox=false; TopMost=true; BackColor=Color.White;
 
-        Text=
-            "Typing Watch â€” Live Chat";
-
-        Width=430;
-        Height=520;
-
-        StartPosition=
-            FormStartPosition.CenterParent;
-
-        FormBorderStyle=
-            FormBorderStyle.FixedDialog;
-
-        MaximizeBox=false;
-        MinimizeBox=false;
-        TopMost=true;
-        BackColor=Color.White;
-
-        Label title=
-            new Label()
+        Label title=new Label(); title.Text="Live Chat - Name: "+displayName;
+        title.SetBounds(15,12,285,28); title.Font=new Font("Segoe UI",11,FontStyle.Bold);
+        changeName.Text="Change Name"; changeName.SetBounds(305,12,95,27);
+        changeName.Click+=(s,e)=>
+        {
+            using(ChatNamePromptForm prompt=new ChatNamePromptForm(displayName))
             {
-                Text=
-                    "ðŸ’¬ Live Chat â€” à¤¸à¤­à¥€ Live Users",
-                Left=15,
-                Top=12,
-                Width=380,
-                Height=28,
-                Font=
-                    new Font(
-                        "Segoe UI",
-                        12,
-                        FontStyle.Bold)
-            };
+                if(prompt.ShowDialog(this)==DialogResult.OK&&!String.IsNullOrWhiteSpace(prompt.DisplayName))
+                {
+                    displayName=prompt.DisplayName;
+                    if(displayName.Length>30)displayName=displayName.Substring(0,30);
+                    if(saveName!=null)saveName(displayName);
+                    title.Text="Live Chat - Name: "+displayName;
+                }
+            }
+        };
 
-        messages.SetBounds(
-            15,
-            48,
-            385,
-            330);
-
-        messages.Anchor=
-            AnchorStyles.Top |
-            AnchorStyles.Bottom |
-            AnchorStyles.Left |
-            AnchorStyles.Right;
-
-        input.SetBounds(
-            15,
-            390,
-            300,
-            28);
-
-        input.Anchor=
-            AnchorStyles.Bottom |
-            AnchorStyles.Left |
-            AnchorStyles.Right;
-
-        send.Text="Send";
-
-        send.SetBounds(
-            322,
-            390,
-            78,
-            28);
-
-        send.Anchor=
-            AnchorStyles.Bottom |
-            AnchorStyles.Right;
-
-        send.Click+=
-            (s,e)=>SendMessage();
-
-        Label note=
-            new Label()
-            {
-                Text=
-                    "Anonymous user ID â€¢ Chat messages are shared with live users",
-                Left=15,
-                Top=425,
-                Width=385,
-                Height=35,
-                ForeColor=Color.DimGray
-            };
-
-        Controls.AddRange(
-            new Control[]
-            {
-                title,
-                messages,
-                input,
-                send,
-                note
-            });
-
+        messages.SetBounds(15,48,385,330);
+        messages.Anchor=AnchorStyles.Top|AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;
+        input.SetBounds(15,390,300,28); input.Anchor=AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;
+        send.Text="Send"; send.SetBounds(322,390,78,28); send.Anchor=AnchorStyles.Bottom|AnchorStyles.Right;
+        send.Click+=(s,e)=>SendMessage();
+        Label note=new Label(); note.Text="Aapke messages turant dikhte hain; chat sabhi users ke saath shared hai.";
+        note.SetBounds(15,425,385,35); note.ForeColor=Color.DimGray;
+        Controls.AddRange(new Control[]{title,changeName,messages,input,send,note});
         AcceptButton=send;
-
-        refreshTimer.Interval=5000;
-
-        refreshTimer.Tick+=
-            (s,e)=>LoadMessages();
-
-        refreshTimer.Start();
-
-        FormClosed+=
-            (s,e)=>refreshTimer.Stop();
-
-        LoadMessages();
+        refreshTimer.Interval=5000; refreshTimer.Tick+=(s,e)=>LoadMessages();
+        refreshTimer.Start(); FormClosed+=(s,e)=>refreshTimer.Stop(); LoadMessages();
     }
 
     void LoadMessages()
     {
-        if(busy)
-            return;
-
+        if(busy)return;
         busy=true;
-
-        ThreadPool.QueueUserWorkItem(
-            delegate
+        ThreadPool.QueueUserWorkItem(delegate
+        {
+            string text="";
+            try
             {
-                string text="";
-
-                try
+                ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;
+                using(WebClient wc=new WebClient())
                 {
-                    ServicePointManager.SecurityProtocol=
-                        SecurityProtocolType.Tls12;
-
-                    using(WebClient wc=
-                        new WebClient())
-                    {
-                        wc.Headers[
-                            HttpRequestHeader.UserAgent]=
-                            "TypingWatch/1.0.0";
-
-                        text=
-                            wc.DownloadString(
-                                serverUrl+
-                                "?action=chat");
-                    }
+                    wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch/1.0.10";
+                    text=wc.DownloadString(serverUrl+"?action=chat&_="+DateTime.UtcNow.Ticks);
                 }
-                catch
+            }
+            catch {}
+            BeginInvoke((MethodInvoker)delegate
+            {
+                busy=false;
+                if(String.IsNullOrEmpty(text))return;
+                string data=ExtractChatValue(text,"messages");
+                if(String.IsNullOrEmpty(data))return;
+                messages.Items.Clear();
+                string[] rows=data.Split(new char[]{'\n'},StringSplitOptions.RemoveEmptyEntries);
+                foreach(string row in rows)
                 {
+                    string[] p=row.Split(new string[]{"|||"},3,StringSplitOptions.None);
+                    if(p.Length==3)messages.Items.Add(p[0]+"  "+p[1]+": "+p[2]);
                 }
-
-                BeginInvoke(
-                    (MethodInvoker)delegate
-                    {
-                        busy=false;
-
-                        if(!String.IsNullOrEmpty(text))
-                        {
-                            string data=
-                                ExtractChatValue(
-                                    text,
-                                    "messages");
-
-                            messages.Items.Clear();
-
-                            if(!String.IsNullOrEmpty(data))
-                            {
-                                string[] rows=
-                                    data.Split(
-                                        new char[]
-                                        {
-                                            '\n'
-                                        },
-                                        StringSplitOptions.RemoveEmptyEntries);
-
-                                foreach(string row in rows)
-                                {
-                                    string[] p=
-                                        row.Split(
-                                            new string[]
-                                            {
-                                                "|||"
-                                            },
-                                            3,
-                                            StringSplitOptions.None);
-
-                                    if(p.Length==3)
-                                    {
-                                        messages.Items.Add(
-                                            p[0]+
-                                            "  "+
-                                            p[1]+
-                                            ": "+
-                                            p[2]);
-                                    }
-                                }
-                            }
-
-                            if(messages.Items.Count>0)
-                            {
-                                messages.TopIndex=
-                                    messages.Items.Count-1;
-                            }
-                        }
-                    });
+                if(messages.Items.Count>0)messages.TopIndex=messages.Items.Count-1;
             });
+        });
     }
 
     void SendMessage()
     {
-        string msg=
-            input.Text.Trim();
-
-        if(msg.Length==0 ||
-           busy)
-        {
-            return;
-        }
-
-        if(msg.Length>300)
-            msg=msg.Substring(0,300);
-
+        string msg=input.Text.Trim();
+        if(msg.Length==0||busy)return;
+        if(msg.Length>300)msg=msg.Substring(0,300);
         input.Clear();
+        messages.Items.Add(DateTime.Now.ToString("HH:mm:ss")+"  "+displayName+": "+msg);
+        if(messages.Items.Count>0)messages.TopIndex=messages.Items.Count-1;
+
+        string safe=msg.Replace("\\","\\\\").Replace("\"","\\\"").Replace("\r"," ").Replace("\n"," ");
+        string safeName=displayName.Replace("\\","\\\\").Replace("\"","\\\"").Replace("\r"," ").Replace("\n"," ");
+        string payload="{\"action\":\"chatSend\",\"userId\":\""+safeName+"\",\"message\":\""+safe+"\"}";
         busy=true;
-
-        string safe=
-            msg.Replace("\\","\\\\")
-               .Replace("\"","\\\"")
-               .Replace("\r"," ")
-               .Replace("\n"," ");
-
-        string payload=
-            "{\"action\":\"chatSend\","+
-            "\"userId\":\""+
-            userId+
-            "\","+
-            "\"message\":\""+
-            safe+
-            "\"}";
-
-        ThreadPool.QueueUserWorkItem(
-            delegate
+        ThreadPool.QueueUserWorkItem(delegate
+        {
+            bool sent=false;
+            try
             {
-                try
+                ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;
+                using(WebClient wc=new WebClient())
                 {
-                    ServicePointManager.SecurityProtocol=
-                        SecurityProtocolType.Tls12;
-
-                    using(WebClient wc=
-                        new WebClient())
-                    {
-                        wc.Headers[
-                            HttpRequestHeader.UserAgent]=
-                            "TypingWatch/1.0.0";
-
-                        wc.Headers[
-                            HttpRequestHeader.ContentType]=
-                            "application/json; charset=utf-8";
-
-                        wc.UploadString(
-                            serverUrl,
-                            "POST",
-                            payload);
-                    }
+                    wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch/1.0.10";
+                    wc.Headers[HttpRequestHeader.ContentType]="application/json; charset=utf-8";
+                    string response=wc.UploadString(serverUrl,"POST",payload);
+                    sent=response.IndexOf("\"ok\":true",StringComparison.OrdinalIgnoreCase)>=0||
+                         response.IndexOf("\"success\":true",StringComparison.OrdinalIgnoreCase)>=0;
                 }
-                catch
-                {
-                }
-
-                BeginInvoke(
-                    (MethodInvoker)delegate
-                    {
-                        busy=false;
-                        LoadMessages();
-                    });
+            }
+            catch {}
+            BeginInvoke((MethodInvoker)delegate
+            {
+                busy=false;
+                if(sent)LoadMessages();
+                else Text="Typing Watch - Live Chat (message pending sync)";
             });
+        });
     }
 
-    string ExtractChatValue(
-        string json,
-        string key)
+    string ExtractChatValue(string json,string key)
     {
-        string token=
-            "\""+key+"\"";
-
-        int i=
-            json.IndexOf(
-                token,
-                StringComparison.OrdinalIgnoreCase);
-
-        if(i<0)
-            return "";
-
-        i=
-            json.IndexOf(
-                ':',
-                i+token.Length);
-
-        if(i<0)
-            return "";
-
-        i++;
-
-        while(
-            i<json.Length &&
-            Char.IsWhiteSpace(json[i]))
-        {
-            i++;
-        }
-
-        if(
-            i>=json.Length ||
-            json[i]!='\"')
-        {
-            return "";
-        }
-
-        i++;
-
-        StringBuilder sb=
-            new StringBuilder();
-
-        bool esc=false;
-
+        string token="\""+key+"\"";
+        int i=json.IndexOf(token,StringComparison.OrdinalIgnoreCase); if(i<0)return "";
+        i=json.IndexOf(':',i+token.Length); if(i<0)return ""; i++;
+        while(i<json.Length&&Char.IsWhiteSpace(json[i]))i++;
+        if(i>=json.Length||json[i]!='\"')return ""; i++;
+        StringBuilder sb=new StringBuilder(); bool esc=false;
         for(;i<json.Length;i++)
         {
             char c=json[i];
-
-            if(esc)
-            {
-                if(c=='n')
-                    sb.Append('\n');
-                else
-                    sb.Append(c);
-
-                esc=false;
-                continue;
-            }
-
-            if(c=='\\')
-            {
-                esc=true;
-                continue;
-            }
-
-            if(c=='\"')
-                break;
-
+            if(esc){if(c=='n')sb.Append('\n');else sb.Append(c);esc=false;continue;}
+            if(c=='\\'){esc=true;continue;}
+            if(c=='\"')break;
             sb.Append(c);
         }
-
         return sb.ToString();
     }
 }
 
 
-// ================================================================
-// SETTINGS DASHBOARD
 // ================================================================
 
 class SettingsDashboardForm : Form
