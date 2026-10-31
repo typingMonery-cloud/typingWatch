@@ -9,12 +9,17 @@ on:
       - '.github/workflows/build-typingwatch.yml'
       - 'version.json'
 
+permissions:
+  contents: write
+
 jobs:
   package:
     runs-on: windows-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Build stable online-sync EXE
         shell: powershell
@@ -25,9 +30,45 @@ jobs:
           if (-not (Test-Path $source)) { throw 'Source C# file was not found.' }
 
           $text = Get-Content -LiteralPath $source -Raw
-          $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.2";')
+
+          # Keep the current application version when the source already has it.
+          $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.3";')
+          $text = $text.Replace('const string AppVersion = "1.0.2";', 'const string AppVersion = "1.0.3";')
           $text = $text.Replace('if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(30); SyncOnlineNow(); }', 'if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(5); SyncOnlineNow(); }')
           $text = $text.Replace('nextOnlineSync=DateTime.Now.AddSeconds(30);', 'nextOnlineSync=DateTime.Now.AddSeconds(5);')
+
+          # FIX: the old source had a placeholder guard which always showed
+          # "GitHub repository details are not connected yet" even though
+          # UpdateOwner/UpdateRepository are already configured.
+          $guardPattern = '(?s)\s*if\(UpdateOwner==\s*"YOUR-GITHUB-USERNAME"\)\s*\{.*?\n\s*\}\s*\n\s*Thread t=new Thread'
+          $guardReplacement = @'
+
+        if(String.IsNullOrWhiteSpace(UpdateOwner) ||
+           String.IsNullOrWhiteSpace(UpdateRepository))
+        {
+            if(manual)
+            {
+                MessageBox.Show(
+                    "GitHub update repository is not configured.",
+                    "Typing Watch",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+
+            return;
+        }
+
+        Thread t=new Thread
+'@
+          $updatedText = [regex]::Replace($text, $guardPattern, $guardReplacement, 1)
+          if ($updatedText -eq $text -and $text -match 'YOUR-GITHUB-USERNAME') {
+            throw 'The old GitHub placeholder guard was not found; build stopped to avoid producing an unchanged EXE.'
+          }
+          $text = $updatedText
+          if ($text -match 'YOUR-GITHUB-USERNAME') {
+            throw 'The old GitHub placeholder is still present after patching.'
+          }
+
           $newPayload = '                    string payload="{\"action\":\"heartbeat\",\"userId\":\""+onlineUserId+"\",\"typing\":\""+(typing?"true":"false")+"\",\"language\":\""+language+"\",\"wpm\":"+((int)Math.Round(displayedWpm))+",\"version\":\""+AppVersion+"\"}";'
           $text = [regex]::Replace($text, '(?m)^\s*string payload=.*heartbeat.*$', $newPayload)
           $text = $text.Replace('https://api.github.com/repos/'+"typingMonery-cloud"+'/'+"typingWatch"+'/releases/latest', 'https://raw.githubusercontent.com/typingMonery-cloud/typingWatch/main/version.json')
@@ -57,3 +98,15 @@ jobs:
           name: TypingWatch-Windows-EXE
           path: dist/TypingWatch.exe
           if-no-files-found: error
+
+      - name: Commit fixed source and EXE
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/TypingWatch_Complete_Online.cs TypingWatch.exe
+          if (-not (git diff --cached --quiet)) {
+            git commit -m "Fix GitHub auto-update in TypingWatch [skip ci]"
+            git push
+          }
