@@ -2,11 +2,6 @@ name: Build Typing Watch Windows EXE
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'src/TypingWatch_Complete_Online.cs'
-      - 'assets/**'
-      - '.github/workflows/build-windows.yml'
 
 jobs:
   build:
