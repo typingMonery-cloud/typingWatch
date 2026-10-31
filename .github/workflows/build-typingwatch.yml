@@ -57,5 +57,6 @@ jobs:
           git add TypingWatch.exe
           if (-not (git diff --cached --quiet)) {
             git commit -m "Build Typing Watch 1.0.10 [skip ci]"
-            git push
+            git pull --rebase origin $env:GITHUB_REF_NAME
+            git push origin HEAD:$env:GITHUB_REF_NAME
           }
