@@ -37,7 +37,6 @@ jobs:
           $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.4";')
           $text = $text.Replace('const string AppVersion = "1.0.2";', 'const string AppVersion = "1.0.4";')
           $text = $text.Replace('const string AppVersion = "1.0.3";', 'const string AppVersion = "1.0.4";')
-          $text = $text.Replace('if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(30); SyncOnlineNow(); }', 'if(DateTime.Now>=nextOnlineSync) { nextOnlineSync=DateTime.Now.AddSeconds(5); SyncOnlineNow(); }')
           $text = $text.Replace('nextOnlineSync=DateTime.Now.AddSeconds(30);', 'nextOnlineSync=DateTime.Now.AddSeconds(5);')
 
           # The real repository is already configured by UpdateOwner and UpdateRepository.
@@ -46,6 +45,189 @@ jobs:
           # Keep the known-good heartbeat payload shape.
           $newPayload = '                    string payload="{\"action\":\"heartbeat\",\"userId\":\""+onlineUserId+"\",\"typing\":\""+(typing?"true":"false")+"\",\"language\":\""+language+"\",\"wpm\":"+((int)Math.Round(displayedWpm))+",\"version\":\""+AppVersion+"\"}";'
           $text = [regex]::Replace($text, '(?m)^\s*string payload=.*heartbeat.*$', $newPayload)
+
+          # Replace the old placeholder updater with a real GitHub version.json check.
+          $newUpdateMethod = @'
+    void CheckForUpdates(bool manual)
+    {
+        if(updateCheckRunning)
+            return;
+
+        if(String.IsNullOrEmpty(UpdateOwner) ||
+           String.IsNullOrEmpty(UpdateRepository))
+        {
+            if(manual)
+            {
+                MessageBox.Show(
+                    "GitHub repository details are not set.",
+                    "Typing Watch",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            return;
+        }
+
+        updateCheckRunning=true;
+
+        ThreadPool.QueueUserWorkItem(delegate
+        {
+            try
+            {
+                string versionUrl=
+                    "https://raw.githubusercontent.com/"+
+                    UpdateOwner+"/"+
+                    UpdateRepository+"/main/version.json?x="+
+                    DateTime.UtcNow.Ticks.ToString();
+
+                string json;
+
+                using(WebClient wc=new WebClient())
+                {
+                    wc.Headers[HttpRequestHeader.UserAgent]=
+                        "TypingWatch/"+AppVersion;
+                    wc.Encoding=Encoding.UTF8;
+                    json=wc.DownloadString(versionUrl);
+                }
+
+                string latest=ExtractJsonValue(json,"tag_name");
+
+                if(String.IsNullOrEmpty(latest))
+                    latest=ExtractJsonValue(json,"version");
+
+                if(String.IsNullOrEmpty(latest))
+                    throw new Exception("version.json mein version nahi mila.");
+
+                latest=latest.Trim().TrimStart('v','V');
+
+                Version currentVersion;
+                Version latestVersion;
+
+                if(!Version.TryParse(
+                    AppVersion.Trim().TrimStart('v','V'),
+                    out currentVersion) ||
+                   !Version.TryParse(latest,out latestVersion))
+                {
+                    throw new Exception(
+                        "Version format samajh nahi aaya.");
+                }
+
+                string downloadUrl=
+                    "https://github.com/"+
+                    UpdateOwner+"/"+
+                    UpdateRepository+
+                    "/raw/refs/heads/main/TypingWatch.exe";
+
+                BeginInvoke((MethodInvoker)delegate
+                {
+                    updateCheckRunning=false;
+
+                    if(latestVersion>currentVersion)
+                    {
+                        DialogResult result=MessageBox.Show(
+                            "New Typing Watch update available.\r\n\r\n"+
+                            "Current version: "+AppVersion+"\r\n"+
+                            "Latest version: "+latest+"\r\n\r\n"+
+                            "Download the latest EXE from the customer website?",
+                            "Typing Watch Update",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Information);
+
+                        if(result==DialogResult.Yes)
+                        {
+                            try
+                            {
+                                Process.Start(downloadUrl);
+                            }
+                            catch
+                            {
+                                Process.Start(
+                                    new ProcessStartInfo(downloadUrl)
+                                    {
+                                        UseShellExecute=true
+                                    });
+                            }
+                        }
+                    }
+                    else if(manual)
+                    {
+                        MessageBox.Show(
+                            "Typing Watch is up to date.\r\n\r\n"+
+                            "Current version: "+AppVersion,
+                            "Typing Watch Update",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                });
+            }
+            catch(Exception ex)
+            {
+                BeginInvoke((MethodInvoker)delegate
+                {
+                    updateCheckRunning=false;
+
+                    if(manual)
+                    {
+                        MessageBox.Show(
+                            "Update check failed.\r\n\r\n"+
+                            ex.Message,
+                            "Typing Watch Update",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                    }
+                });
+            }
+        });
+    }
+
+    string ExtractJsonValue(string json,string key)
+    {
+        if(String.IsNullOrEmpty(json) || String.IsNullOrEmpty(key))
+            return "";
+
+        string marker="\""+key+"\"";
+        int p=json.IndexOf(marker,StringComparison.OrdinalIgnoreCase);
+
+        if(p<0)
+            return "";
+
+        p=json.IndexOf(':',p+marker.Length);
+        if(p<0)
+            return "";
+
+        p++;
+
+        while(p<json.Length &&
+              Char.IsWhiteSpace(json[p]))
+            p++;
+
+        if(p<json.Length && json[p]=='\"')
+        {
+            p++;
+            int end=json.IndexOf('"',p);
+            if(end>=0)
+                return json.Substring(p,end-p);
+        }
+
+        int comma=json.IndexOf(',',p);
+        int brace=json.IndexOf('}',p);
+        int endPos;
+
+        if(comma<0) endPos=brace;
+        else if(brace<0) endPos=comma;
+        else endPos=Math.Min(comma,brace);
+
+        if(endPos>p)
+            return json.Substring(p,endPos-p).Trim();
+
+        return "";
+    }
+'@
+
+          $pattern = '(?s)    void CheckForUpdates\(bool manual\)\s*\{.*?\r?\n    \}\r?\n\r?\n(?=    void )'
+          if (-not [regex]::IsMatch($text,$pattern)) {
+            throw 'Existing CheckForUpdates method was not found for replacement.'
+          }
+          $text = [regex]::Replace($text,$pattern,($newUpdateMethod+"`r`n"),1)
 
           [System.IO.File]::WriteAllText($source, $text, $utf8)
           [System.IO.File]::WriteAllText($patched, $text, $utf8)
@@ -81,6 +263,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add TypingWatch.exe
           if (-not (git diff --cached --quiet)) {
-            git commit -m "Rebuild TypingWatch from current auto-update source [skip ci]"
+            git commit -m "Fix TypingWatch GitHub update check [skip ci]"
             git push
           }
