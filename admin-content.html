@@ -1,40 +1,45 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TypingWatch Website Content Manager</title>
 <style>
-body{margin:0;background:#f4f6f8;font-family:Arial;color:#172033}.wrap{max-width:1100px;margin:auto;padding:24px}.head,.panel{background:#fff;border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 3px 14px rgba(0,0,0,.07)}.head{background:#101827;color:#fff}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}label{font-weight:700;font-size:14px}input,textarea{width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}textarea{min-height:82px;resize:vertical}.full{grid-column:1/-1}button{border:0;border-radius:8px;padding:11px 16px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer;margin:5px 6px 5px 0}.green{background:#15803d}.gray{background:#475569}.msg{padding:11px;border-radius:8px;margin-top:10px;background:#eef2ff}.ok{background:#dcfce7;color:#166534}.err{background:#fee2e2;color:#991b1b}@media(max-width:700px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+body{margin:0;background:#f4f6f8;font-family:Arial;color:#172033}.wrap{max-width:1100px;margin:auto;padding:24px}.head,.panel{background:#fff;border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 3px 14px rgba(0,0,0,.07)}.head{background:#101827;color:#fff}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}label{font-weight:700;font-size:14px}input,textarea{width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}textarea{min-height:82px;resize:vertical}.full{grid-column:1/-1}button{border:0;border-radius:8px;padding:11px 16px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer;margin:5px 6px 5px 0}.green{background:#15803d}.gray{background:#475569}.msg{padding:11px;border-radius:8px;margin-top:10px;background:#eef2ff}.ok{background:#dcfce7;color:#166534}.err{background:#fee2e2;color:#991b1b}.status{font-weight:800;margin-left:8px}@media(max-width:700px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="head"><h1>🌐 Website Content Manager</h1><div>TypingWatch customer website की text, offers और descriptions यहाँ से बदलें।</div></div>
-<div class="panel"><h2>🔐 Admin Authentication</h2><label>ADMIN KEY<input type="password" id="key" placeholder="Enter ADMIN_KEY"></label><button onclick="saveKey()">Save Key</button><button class="gray" onclick="loadContent()">Load Current Content</button><div id="msg" class="msg">Public website content automatically load होगा। Save करने के लिए Admin Key जरूरी है।</div></div>
-<div class="panel"><h2>🏠 Hero & Offer</h2><div class="grid">
-<label>Hero Offer<input id="HeroOffer"></label><label>Hero Title<input id="HeroTitle"></label><label class="full">Hero Description<textarea id="HeroDescription"></textarea></label><label>Download Button<input id="DownloadButton"></label><label>License Button<input id="LicenseButton"></label><label>Trust 1<input id="Trust1"></label><label>Trust 2<input id="Trust2"></label><label>Trust 3<input id="Trust3"></label><label>Trust 4<input id="Trust4"></label><label>Ready Title<input id="ReadyTitle"></label><label class="full">Ready Text<textarea id="ReadyText"></textarea></label>
-</div></div>
-<div class="panel"><h2>📦 Apps & Features</h2><div class="grid">
-<label>Apps Title<input id="AppsTitle"></label><label class="full">Apps Description<textarea id="AppsDescription"></textarea></label><label>Features Title<input id="FeaturesTitle"></label><label class="full">Features Description<textarea id="FeaturesDescription"></textarea></label>
-<label>Feature 1 Title<input id="Feature1Title"></label><label>Feature 1 Description<textarea id="Feature1Text"></textarea></label><label>Feature 2 Title<input id="Feature2Title"></label><label>Feature 2 Description<textarea id="Feature2Text"></textarea></label><label>Feature 3 Title<input id="Feature3Title"></label><label>Feature 3 Description<textarea id="Feature3Text"></textarea></label><label>Feature 4 Title<input id="Feature4Title"></label><label>Feature 4 Description<textarea id="Feature4Text"></textarea></label><label>Feature 5 Title<input id="Feature5Title"></label><label>Feature 5 Description<textarea id="Feature5Text"></textarea></label><label>Feature 6 Title<input id="Feature6Title"></label><label>Feature 6 Description<textarea id="Feature6Text"></textarea></label>
-</div></div>
-<div class="panel"><h2>🔑 License Offer</h2><div class="grid">
-<label>Offer Label<input id="LicenseOffer"></label><label>Offer Duration / Number<input id="LicenseYear"></label><label>License Title<input id="LicenseTitle"></label><label class="full">License Description<textarea id="LicenseDescription"></textarea></label><label class="full">License Steps<textarea id="LicenseSteps"></textarea></label><label>Support Title<input id="LicenseSupportTitle"></label><label>Support Text<textarea id="LicenseSupportText"></textarea></label>
-</div></div>
-<div class="panel"><h2>❓ FAQ</h2><div class="grid">
-<label>FAQ Title<input id="FaqTitle"></label><label class="full">FAQ Description<textarea id="FaqDescription"></textarea></label><label>Question 1<input id="Faq1Q"></label><label>Answer 1<textarea id="Faq1A"></textarea></label><label>Question 2<input id="Faq2Q"></label><label>Answer 2<textarea id="Faq2A"></textarea></label><label>Question 3<input id="Faq3Q"></label><label>Answer 3<textarea id="Faq3A"></textarea></label><label>Question 4<input id="Faq4Q"></label><label>Answer 4<textarea id="Faq4A"></textarea></label><label>Question 5<input id="Faq5Q"></label><label>Answer 5<textarea id="Faq5A"></textarea></label><label class="full">Footer Text<textarea id="FooterText"></textarea></label>
-</div><button class="green" onclick="saveContent()">💾 Save All Website Content</button><div id="saveMsg" class="msg"></div></div>
+<div class="head"><h1>🌐 Website Content Manager</h1><div>Customer website की text, offers और descriptions यहाँ से बदलें।</div></div>
+<div class="panel">
+<h2>🔐 Admin Authentication</h2>
+<label>ADMIN KEY<input type="password" id="key" placeholder="Enter ADMIN_KEY"></label>
+<button onclick="saveKey()">Save Key</button><button class="gray" onclick="loadContent()">Load Current Content</button>
+<span id="connection" class="status">● Not tested</span>
+<div id="msg" class="msg">पहले Load Current Content दबाकर backend connection जाँचें।</div>
+</div>
+<div class="panel"><h2>🏠 Hero & Offer</h2><div class="grid" id="heroFields"></div></div>
+<div class="panel"><h2>📦 Apps & Features</h2><div class="grid" id="featureFields"></div></div>
+<div class="panel"><h2>🔑 License Offer</h2><div class="grid" id="licenseFields"></div></div>
+<div class="panel"><h2>❓ FAQ</h2><div class="grid" id="faqFields"></div><button class="green" onclick="saveContent()">💾 Save All Website Content</button><div id="saveMsg" class="msg"></div></div>
 </div>
 <script>
 const API='https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec';
-function key(){return sessionStorage.getItem('tw_admin_key')||document.getElementById('key').value.trim()}
-function saveKey(){const k=document.getElementById('key').value.trim();if(k)sessionStorage.setItem('tw_admin_key',k);show('msg','Admin Key saved in this browser. Now you can save changes.',true)}
-function jsonp(params){return new Promise((resolve,reject)=>{const cb='wc_'+Date.now()+'_'+Math.random().toString(36).slice(2);window[cb]=d=>{delete window[cb];s.remove();resolve(d)};const s=document.createElement('script');s.src=API+'?'+new URLSearchParams({...params,callback:cb,_:Date.now()});s.onerror=()=>{delete window[cb];s.remove();reject(new Error('Connection failed'))};document.body.appendChild(s)})}
+const groups={
+ hero:[['HeroOffer','Hero Offer'],['HeroTitle','Hero Title'],['HeroDescription','Hero Description','textarea'],['DownloadButton','Download Button'],['LicenseButton','License Button'],['Trust1','Trust 1'],['Trust2','Trust 2'],['Trust3','Trust 3'],['Trust4','Trust 4'],['ReadyTitle','Ready Title'],['ReadyText','Ready Text','textarea']],
+ feature:[['AppsTitle','Apps Title'],['AppsDescription','Apps Description','textarea'],['FeaturesTitle','Features Title'],['FeaturesDescription','Features Description','textarea'],['Feature1Title','Feature 1 Title'],['Feature1Text','Feature 1 Description','textarea'],['Feature2Title','Feature 2 Title'],['Feature2Text','Feature 2 Description','textarea'],['Feature3Title','Feature 3 Title'],['Feature3Text','Feature 3 Description','textarea'],['Feature4Title','Feature 4 Title'],['Feature4Text','Feature 4 Description','textarea'],['Feature5Title','Feature 5 Title'],['Feature5Text','Feature 5 Description','textarea'],['Feature6Title','Feature 6 Title'],['Feature6Text','Feature 6 Description','textarea']],
+ license:[['LicenseOffer','Offer Label'],['LicenseYear','Offer Duration / Number'],['LicenseTitle','License Title'],['LicenseDescription','License Description','textarea'],['LicenseSteps','License Steps','textarea'],['LicenseSupportTitle','Support Title'],['LicenseSupportText','Support Text','textarea']],
+ faq:[['FaqTitle','FAQ Title'],['FaqDescription','FAQ Description','textarea'],['Faq1Q','Question 1'],['Faq1A','Answer 1','textarea'],['Faq2Q','Question 2'],['Faq2A','Answer 2','textarea'],['Faq3Q','Question 3'],['Faq3A','Answer 3','textarea'],['Faq4Q','Question 4'],['Faq4A','Answer 4','textarea'],['Faq5Q','Question 5'],['Faq5A','Answer 5','textarea'],['FooterText','Footer Text','textarea']]
+};
+function render(list,id){document.getElementById(id).innerHTML=list.map(x=>'<label>'+x[1]+(x[2]==='textarea'?'<textarea id="'+x[0]+'"></textarea>':'<input id="'+x[0]+'">')+'</label>').join('')}
+render(groups.hero,'heroFields');render(groups.feature,'featureFields');render(groups.license,'licenseFields');render(groups.faq,'faqFields');
+function adminKey(){return sessionStorage.getItem('tw_admin_key')||document.getElementById('key').value.trim()}
+function saveKey(){const k=document.getElementById('key').value.trim();if(!k){show('msg','ADMIN KEY खाली है।',false);return}sessionStorage.setItem('tw_admin_key',k);show('msg','Admin Key saved in this browser.',true)}
+function jsonp(params,timeout=12000){return new Promise((resolve,reject)=>{const cb='wc_'+Date.now()+'_'+Math.random().toString(36).slice(2);let done=false;const s=document.createElement('script');const finish=(fn,v)=>{if(done)return;done=true;clearTimeout(t);try{delete window[cb]}catch(e){}s.remove();fn(v)};const t=setTimeout(()=>finish(reject,new Error('Backend response timeout')),timeout);window[cb]=d=>finish(resolve,d||{});s.onerror=()=>finish(reject,new Error('Backend connection failed'));s.src=API+'?'+new URLSearchParams({...params,callback:cb,_:Date.now()});document.body.appendChild(s)})}
 function show(id,text,ok){const e=document.getElementById(id);e.textContent=text;e.className='msg '+(ok?'ok':'err')}
-function fill(c){Object.keys(c||{}).forEach(k=>{const e=document.getElementById(k);if(e)e.value=c[k]||''})}
-async function loadContent(){try{const d=await jsonp({action:'website_content'});if(d.ok===false)throw Error(d.error||'Load failed');fill(d.content||{});show('msg','Current website content loaded successfully.',true)}catch(e){show('msg',e.message,false)}}
-async function saveContent(){const k=key();if(!k){show('saveMsg','पहले ADMIN KEY डालें और Save Key दबाएँ।',false);return}const content={};document.querySelectorAll('input[id],textarea[id]').forEach(e=>{if(e.id!=='key')content[e.id]=e.value});const entries=Object.entries(content);const chunkSize=6;try{for(let i=0;i<entries.length;i+=chunkSize){const chunk=Object.fromEntries(entries.slice(i,i+chunkSize));const d=await jsonp({action:'admin',op:'website_content',token:k,content:JSON.stringify(chunk)});if(d.ok===false)throw Error(d.error||'Save failed');show('saveMsg','Saving website content... '+Math.min(i+chunkSize,entries.length)+'/'+entries.length,true)}show('saveMsg','Website content saved successfully.',true);await loadContent()}catch(e){show('saveMsg',e.message,false)}}
+function setConnection(ok,text){const e=document.getElementById('connection');e.textContent=(ok?'● Connected':'● Error')+(text?' · '+text:'');e.style.color=ok?'#15803d':'#b91c1c'}
+function fill(c){Object.keys(c||{}).forEach(k=>{const e=document.getElementById(k);if(e)e.value=c[k]==null?'':c[k]})}
+async function loadContent(){show('msg','Connecting to backend...',true);try{const d=await jsonp({action:'website_content'});if(d.ok===false)throw Error(d.error||'Load failed');fill(d.content||{});setConnection(true,'website content loaded');show('msg','Current website content loaded successfully.',true)}catch(e){setConnection(false,e.message);show('msg',e.message,false)}}
+async function saveContent(){const k=adminKey();if(!k){show('saveMsg','पहले ADMIN KEY डालें और Save Key दबाएँ।',false);return}const content={};document.querySelectorAll('input[id],textarea[id]').forEach(e=>{if(e.id!=='key')content[e.id]=e.value});const entries=Object.entries(content);const chunkSize=6;try{for(let i=0;i<entries.length;i+=chunkSize){const chunk=Object.fromEntries(entries.slice(i,i+chunkSize));const d=await jsonp({action:'admin',op:'website_content',token:k,content:JSON.stringify(chunk)});if(d.ok===false)throw Error(d.error||'Save failed');show('saveMsg','Saving... '+Math.min(i+chunkSize,entries.length)+'/'+entries.length,true)}setConnection(true,'saved');show('saveMsg','Website content saved successfully.',true);await loadContent()}catch(e){setConnection(false,e.message);show('saveMsg',e.message,false)}}
 loadContent();
 </script>
 </body>
