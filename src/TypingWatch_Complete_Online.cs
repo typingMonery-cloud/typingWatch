@@ -46,7 +46,7 @@ class TypingWatch : Form
 
     // ===== ONLINE FEATURES =====
     // Existing deployed Google Apps Script Web App for this project.
-    const string OnlineServerUrl = "https://script.google.com/macros/s/AKfycbxqCie36dJeZXBTRDsFMDhFYE0vZHnhXFdH1laGqTLScO-IPTlqZJ9IOotb91oJfR2QUA/exec";
+    const string OnlineServerUrl = "https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec";
     const string AppVersion = "1.0.0";
     const string UpdateOwner = "typingMonery-cloud";
     const string UpdateRepository = "typingWatch";
