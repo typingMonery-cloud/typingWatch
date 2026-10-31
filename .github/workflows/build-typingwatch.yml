@@ -29,24 +29,20 @@ jobs:
           $patched = Join-Path $env:GITHUB_WORKSPACE 'src\TypingWatch_Complete_Online_Build.cs'
           if (-not (Test-Path $source)) { throw 'Source C# file was not found.' }
 
-          # IMPORTANT: build the CURRENT repository source.
-          # Do not replace it with HEAD^; that would restore the old updater.
           $utf8 = New-Object System.Text.UTF8Encoding($false)
           $text = [System.IO.File]::ReadAllText($source, $utf8)
 
-          $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.4";')
-          $text = $text.Replace('const string AppVersion = "1.0.2";', 'const string AppVersion = "1.0.4";')
-          $text = $text.Replace('const string AppVersion = "1.0.3";', 'const string AppVersion = "1.0.4";')
+          $text = $text.Replace('const string AppVersion = "1.0.0";', 'const string AppVersion = "1.0.8";')
+          $text = $text.Replace('const string AppVersion = "1.0.2";', 'const string AppVersion = "1.0.8";')
+          $text = $text.Replace('const string AppVersion = "1.0.3";', 'const string AppVersion = "1.0.8";')
+          $text = $text.Replace('const string AppVersion = "1.0.4";', 'const string AppVersion = "1.0.8";')
           $text = $text.Replace('nextOnlineSync=DateTime.Now.AddSeconds(30);', 'nextOnlineSync=DateTime.Now.AddSeconds(5);')
 
-          # The real repository is already configured by UpdateOwner and UpdateRepository.
           $text = [regex]::Replace($text, 'if\(UpdateOwner==\s*"YOUR-GITHUB-USERNAME"\)', 'if(false)', 1)
 
-          # Keep the known-good heartbeat payload shape.
           $newPayload = '                    string payload="{\"action\":\"heartbeat\",\"userId\":\""+onlineUserId+"\",\"typing\":\""+(typing?"true":"false")+"\",\"language\":\""+language+"\",\"wpm\":"+((int)Math.Round(displayedWpm))+",\"version\":\""+AppVersion+"\"}";'
           $text = [regex]::Replace($text, '(?m)^\s*string payload=.*heartbeat.*$', $newPayload)
 
-          # Replace the old placeholder updater with a real GitHub version.json check.
           $newUpdateMethod = @'
     void CheckForUpdates(bool manual)
     {
@@ -127,7 +123,7 @@ jobs:
                             "New Typing Watch update available.\r\n\r\n"+
                             "Current version: "+AppVersion+"\r\n"+
                             "Latest version: "+latest+"\r\n\r\n"+
-                            "Download the latest EXE from the customer website?",
+                            "Download the latest EXE?",
                             "Typing Watch Update",
                             MessageBoxButtons.YesNo,
                             MessageBoxIcon.Information);
@@ -263,6 +259,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add TypingWatch.exe
           if (-not (git diff --cached --quiet)) {
-            git commit -m "Fix TypingWatch GitHub update check [skip ci]"
+            git commit -m "Build Typing Watch 1.0.8 [skip ci]"
             git push
           }
