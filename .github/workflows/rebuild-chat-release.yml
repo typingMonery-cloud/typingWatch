@@ -1,0 +1,52 @@
+name: Rebuild Typing Watch with fast Live Chat
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rebuild-chat-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compile x86 Windows Forms EXE
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe'
+          if (-not (Test-Path $csc)) { throw 'C# compiler was not found.' }
+          & $csc /nologo /target:winexe /platform:x86 /optimize+ /out:TypingWatch.exe /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll src\TypingWatch_Complete_Online.cs
+          if ($LASTEXITCODE -ne 0) { throw 'C# compilation failed.' }
+          if (-not (Test-Path 'TypingWatch.exe')) { throw 'TypingWatch.exe was not created.' }
+          if ((Get-Item 'TypingWatch.exe').Length -lt 30000) { throw 'Built EXE is unexpectedly small.' }
+
+      - name: Startup smoke test
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $p = Start-Process -FilePath (Join-Path $env:GITHUB_WORKSPACE 'TypingWatch.exe') -PassThru
+          Start-Sleep -Seconds 10
+          if ($p.HasExited) { throw "TypingWatch exited during startup test. ExitCode=$($p.ExitCode)" }
+          Stop-Process -Id $p.Id -Force
+
+      - name: Commit rebuilt EXE
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+users.noreply.github.com"
+          git add TypingWatch.exe
+          if (-not (git diff --cached --quiet)) {
+            git commit -m "Rebuild Typing Watch with 1 second Live Chat [skip ci]"
+            git pull --rebase origin $env:GITHUB_REF_NAME
+            git push origin HEAD:$env:GITHUB_REF_NAME
+          }
