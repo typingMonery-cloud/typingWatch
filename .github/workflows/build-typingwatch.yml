@@ -31,6 +31,15 @@ jobs:
           $utf8 = New-Object System.Text.UTF8Encoding($false)
           $text = [System.IO.File]::ReadAllText($source,$utf8)
 
+          # Permanent target: 100 hours.
+          $text = $text.Replace('TimeSpan.FromHours(50)','TimeSpan.FromHours(100)')
+          $text = $text.Replace('Remaining (50h):','Remaining (100h):')
+
+          # Remove broken UTF-8/ANSI label text from the UI.
+          $text = $text.Replace('âš™ Settings Dashboard','Settings Dashboard')
+          $text = $text.Replace('ðŸ’¬ Live Chat','Live Chat')
+          $text = $text.Replace('â†» Check for Updates','Check for Updates')
+
           $text = $text.Replace('const string AppVersion = "1.0.10";','const string AppVersion = "1.0.11";')
           $text = $text.Replace('onlineUsersLabel.Visible=false;','onlineUsersLabel.Visible=true;')
 
@@ -46,6 +55,8 @@ jobs:
           $startupReplacement = 'Shown+=(s,e)=>{ StartOnlineSync(); CheckForUpdates(false); };'
           $text = [regex]::Replace($text,$startupPattern,$startupReplacement,1)
 
+          # Keep the permanent source file in sync with the built EXE.
+          [System.IO.File]::WriteAllText($source,$text,$utf8)
           [System.IO.File]::WriteAllText($build,$text,$utf8)
 
       - name: Compile x86 Windows Forms EXE
@@ -75,15 +86,15 @@ jobs:
           path: TypingWatch.exe
           if-no-files-found: error
 
-      - name: Commit rebuilt EXE
+      - name: Commit rebuilt EXE and permanent source fixes
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add TypingWatch.exe
+          git add TypingWatch.exe src\TypingWatch_Complete_Online.cs
           if (-not (git diff --cached --quiet)) {
-            git commit -m "Build Typing Watch 1.0.11 fixed [skip ci]"
+            git commit -m "Build Typing Watch 1.0.11 with permanent 100-hour target and clean labels [skip ci]"
             git pull --rebase origin $env:GITHUB_REF_NAME
             git push origin HEAD:$env:GITHUB_REF_NAME
           }
