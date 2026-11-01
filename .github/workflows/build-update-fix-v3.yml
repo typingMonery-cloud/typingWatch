@@ -2,6 +2,11 @@ name: Build TypingWatch Update Fix v3
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'src/TypingWatch_Complete_Online.cs'
+      - 'version.json'
+      - '.github/workflows/build-update-fix-v3.yml'
 permissions:
   contents: write
 
@@ -24,9 +29,22 @@ jobs:
           $utf8=New-Object System.Text.UTF8Encoding($false)
           $text=[System.IO.File]::ReadAllText($source,$utf8)
 
-          # Remove the old disconnected-GitHub placeholder branch.
-          $placeholder='(?s)\s*if\(false\)\s*\{\s*if\(manual\)\s*\{.*?\}\s*return;\s*\}\s*'
-          $text=[regex]::Replace($text,$placeholder,"`r`n",1)
+          # Release version used by the customer EXE.
+          $text=$text.Replace('const string AppVersion = "1.0.10";','const string AppVersion = "1.0.11";')
+
+          # Keep live online count visible in the watch.
+          $text=$text.Replace('onlineUsersLabel.Visible=false;','onlineUsersLabel.Visible=true;')
+
+          # Read latest version from the Apps Script config endpoint. This avoids
+          # raw.githubusercontent.com/TLS problems on older Windows systems.
+          $old='string api="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/version.json";'
+          $new='string api=OnlineServerUrl+"?action=config&_="+DateTime.UtcNow.Ticks;'
+          $text=$text.Replace($old,$new)
+
+          # Use github.com raw route for the update EXE download.
+          $oldDownload='string url="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/TypingWatch.exe";'
+          $newDownload='string url="https://github.com/"+UpdateOwner+"/"+UpdateRepository+"/raw/refs/heads/main/TypingWatch.exe";'
+          $text=$text.Replace($oldDownload,$newDownload)
 
           # Start online/update work after the WinForms handle/message loop exists.
           $startupPattern='BeginInvoke\(\(MethodInvoker\)delegate\s*\{\s*StartOnlineSync\(\);\s*CheckForUpdates\(false\);\s*\}\);'
@@ -94,7 +112,7 @@ class Startup
       - name: Upload verified EXE
         uses: actions/upload-artifact@v4
         with:
-          name: TypingWatch-Update-Fixed-x86-v3
+          name: TypingWatch-1.0.11-fixed-x86-v3
           path: TypingWatch.exe
           if-no-files-found: error
 
@@ -106,6 +124,6 @@ class Startup
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add TypingWatch.exe
           if(-not (git diff --cached --quiet)) {
-            git commit -m 'Publish updater-fixed TypingWatch EXE v3 [skip ci]'
+            git commit -m 'Publish updater-fixed TypingWatch EXE v3 1.0.11 [skip ci]'
             git push
           }
