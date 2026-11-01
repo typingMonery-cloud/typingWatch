@@ -18,32 +18,46 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch chat polling speed
+      - name: Patch chat and online integration
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           $source = 'src\TypingWatch_Complete_Online.cs'
+          $backend = 'backend\Code.gs'
           $utf8 = New-Object System.Text.UTF8Encoding($false)
+
           $text = [System.IO.File]::ReadAllText($source,$utf8)
-
-          # Live Chat: refresh shared messages every 1 second instead of 5 seconds.
           $text = $text.Replace('refreshTimer.Interval=5000;', 'refreshTimer.Interval=1000;')
-
-          # After a successful send, immediately refresh the shared chat so the sender
-          # and other connected users see the message without waiting for the next poll.
-          $text = $text.Replace('busy=false;\n                LoadMessages();', 'busy=false;\n                LoadMessages();')
-
           [System.IO.File]::WriteAllText($source,$text,$utf8)
 
-      - name: Commit permanent chat fix
+          # Keep the repository version aligned with the customer EXE.
+          $version = '{"tag_name":"1.0.13"}'
+          [System.IO.File]::WriteAllText('version.json',$version,$utf8)
+
+          # The Apps Script project previously had a 1.0.3 fallback. Update the
+          # repository source so the next deployment reports the current EXE version.
+          if (Test-Path $backend) {
+            $b = [System.IO.File]::ReadAllText($backend,$utf8)
+            $b = $b.Replace("AppVersion: '1.0.3'", "AppVersion: '1.0.13'")
+            $b = $b.Replace("const version=c.AppVersion || '1.0.3';", "const version=c.AppVersion || '1.0.13';")
+            [System.IO.File]::WriteAllText($backend,$b,$utf8)
+          }
+
+      - name: Validate backend JavaScript
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          node --check backend\Code.gs
+
+      - name: Commit permanent integration fixes
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           git config user.name "github-actions[bot]"
           git config user.email "41898282+users.noreply.github.com"
-          git add src\TypingWatch_Complete_Online.cs
+          git add src\TypingWatch_Complete_Online.cs backend\Code.gs version.json
           if (-not (git diff --cached --quiet)) {
-            git commit -m "Make Live Chat messages appear within 1 second [skip ci]"
+            git commit -m "Align chat backend and update version with Typing Watch 1.0.13 [skip ci]"
             git pull --rebase origin $env:GITHUB_REF_NAME
             git push origin HEAD:$env:GITHUB_REF_NAME
           }
