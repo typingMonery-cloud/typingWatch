@@ -2509,7 +2509,7 @@ class LiveChatForm : Form
         note.SetBounds(15,425,385,35); note.ForeColor=Color.DimGray;
         Controls.AddRange(new Control[]{title,changeName,messages,input,send,note});
         AcceptButton=send;
-        refreshTimer.Interval=5000; refreshTimer.Tick+=(s,e)=>LoadMessages();
+        refreshTimer.Interval=1000; refreshTimer.Tick+=(s,e)=>LoadMessages();
         refreshTimer.Start(); FormClosed+=(s,e)=>refreshTimer.Stop(); LoadMessages();
     }
 
