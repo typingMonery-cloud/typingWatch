@@ -112,7 +112,7 @@ class TypingWatch : Form
     const string OnlineServerUrl =
         "https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec";
 
-    const string AppVersion = "1.0.13";
+    const string AppVersion = "1.0.14";
 
     const string UpdateOwner = "typingMonery-cloud";
     const string UpdateRepository = "typingWatch";
@@ -637,14 +637,14 @@ class TypingWatch : Form
                 int left=Math.Max(
                     0,
                     (int)Math.Ceiling(
-                        365-(DateTime.Now-start).TotalDays));
+                        5-(DateTime.Now-start).TotalDays));
 
                 if(left>0)
                 {
                     return
                         "License Status: FREE TRIAL\r\n"+
                         "Trial days remaining: "+
-                        left+" of 365 days";
+                        left+" of 5 days";
                 }
 
                 return
@@ -1795,7 +1795,7 @@ class TypingWatch : Form
             {
                 trialExpired=
                     (DateTime.Now-start)
-                    .TotalDays>=365;
+                    .TotalDays>=5;
             }
         }
         else
