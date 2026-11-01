@@ -32,13 +32,13 @@ jobs:
           $text = [System.IO.File]::ReadAllText($source,$utf8)
 
           # Permanent target: 100 hours.
-          $text = $text.Replace('TimeSpan.FromHours(50)','TimeSpan.FromHours(100)')
-          $text = $text.Replace('Remaining (50h):','Remaining (100h):')
+          $text = [regex]::Replace($text,'TimeSpan\.FromHours\(50\)','TimeSpan.FromHours(100)')
+          $text = [regex]::Replace($text,'Remaining \(50h\):','Remaining (100h):')
 
-          # Remove broken UTF-8/ANSI label text from the UI.
-          $text = $text.Replace('âš™ Settings Dashboard','Settings Dashboard')
-          $text = $text.Replace('ðŸ’¬ Live Chat','Live Chat')
-          $text = $text.Replace('â†» Check for Updates','Check for Updates')
+          # Remove any broken encoding characters from these three UI labels.
+          $text = [regex]::Replace($text,'(?m)(dashboardButton\.Text=\s*)".*?(Settings Dashboard)";','$1"$2";')
+          $text = [regex]::Replace($text,'(?m)(chatButton\.Text=\s*)".*?(Live Chat)";','$1"$2";')
+          $text = [regex]::Replace($text,'(?m)(updateButton\.Text=\s*)".*?(Check for Updates)";','$1"$2";')
 
           $text = $text.Replace('const string AppVersion = "1.0.10";','const string AppVersion = "1.0.11";')
           $text = $text.Replace('onlineUsersLabel.Visible=false;','onlineUsersLabel.Visible=true;')
@@ -55,7 +55,6 @@ jobs:
           $startupReplacement = 'Shown+=(s,e)=>{ StartOnlineSync(); CheckForUpdates(false); };'
           $text = [regex]::Replace($text,$startupPattern,$startupReplacement,1)
 
-          # Keep the permanent source file in sync with the built EXE.
           [System.IO.File]::WriteAllText($source,$text,$utf8)
           [System.IO.File]::WriteAllText($build,$text,$utf8)
 
@@ -91,7 +90,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+users.noreply.github.com"
           git add TypingWatch.exe src\TypingWatch_Complete_Online.cs
           if (-not (git diff --cached --quiet)) {
             git commit -m "Build Typing Watch 1.0.11 with permanent 100-hour target and clean labels [skip ci]"
