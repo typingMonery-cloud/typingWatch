@@ -55,7 +55,7 @@ jobs:
             ['backend app catalog functions', /function appsPublic_\(/.test(backend) && /function appsAdmin_\(/.test(backend)],
             ['backend website content functions', /function websiteContent_\(/.test(backend) && /function saveWebsiteContent_\(/.test(backend)],
             ['Apps sheet is initialized', /APPS: 'Apps'/.test(backend) && /SHEETS\.APPS/.test(backend)],
-            ['admin reads backend stats and config', /read\('stats'\)/.test(admin) && /read\('config'\)/.test(admin)],
+            ['admin reads protected stats and config', admin.includes("admin('stats')") && admin.includes("read('config')")],
             ['admin writes use protected admin operation', /action:'admin'/.test(admin) && /token:k/.test(admin) && /adminKey:k/.test(admin)],
             ['admin exposes app catalog editor', /Website App Catalog/.test(admin) && /apps_save/.test(admin)],
             ['admin exposes website content editor', /Website Content/.test(admin) && /website_content/.test(admin)],
