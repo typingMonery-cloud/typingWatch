@@ -54,6 +54,8 @@ jobs:
             ['backend chat routes', /action === 'chat'/.test(backend) && /action === 'chatsend'/.test(backend)],
             ['backend app catalog functions', /function appsPublic_\(/.test(backend) && /function appsAdmin_\(/.test(backend)],
             ['backend website content functions', /function websiteContent_\(/.test(backend) && /function saveWebsiteContent_\(/.test(backend)],
+            ['license sheet supports legacy headers', backend.includes("const LICENSE_HEADERS = ['LicenseKey','UserID','Status','PlanType','ExpiryDate','CreatedDate','Notes']") && backend.includes('ensureLicenseSheet_')],
+            ['admin license keys use desktop-compatible hash', backend.includes('makeTypingWatchLicenseKey_') && backend.includes('TW2026-OWNER-ASHISH-YADAV-CHANGE-BEFORE-RELEASE') && admin.includes('newEmail')],
             ['Apps sheet is initialized', /APPS: 'Apps'/.test(backend) && /SHEETS\.APPS/.test(backend)],
             ['admin reads protected stats and config', admin.includes("admin('stats')") && admin.includes("read('config')")],
             ['admin writes use protected admin operation', /action:'admin'/.test(admin) && /token:k/.test(admin) && /adminKey:k/.test(admin)],
