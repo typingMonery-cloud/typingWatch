@@ -9,6 +9,10 @@ on:
       - 'index.html'
   workflow_dispatch:
 
+concurrency:
+  group: typingwatch-build-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -21,19 +25,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Apply stable Live Chat patch
+      - name: Read app version and apply stable Live Chat patch
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           $path = 'src\TypingWatch_Complete_Online.cs'
           $src = Get-Content $path -Raw
+          $match = [regex]::Match($src, 'AppVersion\s*=\s*"([^"]+)"')
+          if (-not $match.Success) { throw 'AppVersion not found in source.' }
+          $version = $match.Groups[1].Value
+          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           $start = $src.IndexOf('class LiveChatForm : Form')
           $end = $src.IndexOf('class SettingsDashboardForm : Form')
           if ($start -lt 0 -or $end -lt 0 -or $end -le $start) { throw 'LiveChatForm boundaries not found.' }
           $chat = Get-Content 'build\StableLiveChatForm.cs' -Raw
           $src = $src.Substring(0,$start) + $chat + $src.Substring($end)
           Set-Content -Path $path -Value $src -Encoding UTF8
-          Write-Host 'Stable Live Chat patch applied.'
+          Write-Host "Building TypingWatch $version"
 
       - name: Compile x86 EXE
         shell: powershell
@@ -61,7 +69,7 @@ jobs:
       - name: Upload final EXE
         uses: actions/upload-artifact@v4
         with:
-          name: TypingWatch-Windows-x86-Stable-1.0.13
+          name: TypingWatch-Windows-x86-${{ env.APP_VERSION }}
           path: TypingWatch.exe
           if-no-files-found: error
 
@@ -73,6 +81,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add TypingWatch.exe
           if (-not (git diff --cached --quiet)) {
-            git commit -m 'Publish stable TypingWatch EXE 1.0.13 [skip ci]'
-            git push origin HEAD:${env:GITHUB_REF_NAME}
+            git commit -m "Publish TypingWatch EXE ${{ env.APP_VERSION }} [skip ci]"
+            git fetch origin $env:GITHUB_REF_NAME
+            git rebase origin/$env:GITHUB_REF_NAME
+            git push origin HEAD:$env:GITHUB_REF_NAME
           }
