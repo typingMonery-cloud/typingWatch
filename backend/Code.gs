@@ -86,12 +86,11 @@ function doGet(e) {
     const params = (e && e.parameter) || {};
     const action = String(params.action || 'stats').toLowerCase();
     if (action === 'health') response = json_({ok:true,success:true,service:'Typing Watch',serverTime:new Date().toISOString()});
-    else if (action === 'stats' || action === 'admin_stats') response = stats_();
+    else if (action === 'stats' || action === 'admin_stats') response = statsPublic_();
     else if (action === 'config' || action === 'getconfig') response = config_();
     else if (action === 'website_content' || action === 'websitecontent') response = websiteContent_();
     else if (action === 'apps') response = appsPublic_();
-    else if (action === 'licenses') response = licenses_();
-    else if (action === 'downloads') response = downloads_();
+    else if (action === 'licenses' || action === 'downloads') response = json_({ok:false,success:false,error:'Admin authentication required'});
     else if (action === 'chat') response = chat_();
     else if (action === 'dashboard' || action === 'dashboard_data') {
       const stats = statsObject_();
@@ -238,6 +237,9 @@ function admin_(b) {
   if(!token||supplied!==token)return json_({ok:false,success:false,error:'Unauthorized'});
   const op=String(b.op||b.operation||'').toLowerCase();
 
+  if(op==='stats') return json_(statsObject_());
+  if(op==='list_licenses') return licenses_();
+  if(op==='list_downloads') return downloads_();
   if(op==='apps'||op==='apps_save'||op==='apps_delete') return appsAdmin_(b);
   if(op==='announcement'||op==='update_announcement'){
     setControl_('Information',String(b.text!==undefined?b.text:(b.announcement||'')));
@@ -393,3 +395,12 @@ function saveWebsiteContent_(b) {
   return json_({ok:true,success:true,saved:saved});
 }
 
+
+function statsPublic_() {
+  const s=statsObject_();
+  return json_({
+    ok:true,success:true,liveUsers:s.liveUsers,onlineUsers:s.onlineUsers,
+    typingNow:s.typingNow,hindiTyping:s.hindiTyping,englishTyping:s.englishTyping,
+    serverTime:s.serverTime
+  });
+}
