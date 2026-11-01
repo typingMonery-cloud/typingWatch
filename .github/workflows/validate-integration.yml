@@ -48,8 +48,8 @@ jobs:
           const checks = [
             ['backend health route', /action === 'health'/.test(backend)],
             ['backend heartbeat route', /action === 'heartbeat'/.test(backend)],
-            ['backend stats route', /action === 'stats'/.test(backend) && /function statsPublic_\\(/.test(backend)],
-            ['private records require admin authentication', /Admin authentication required/.test(backend) && /op==='list_licenses'/.test(backend) && /op==='list_downloads'/.test(backend) && /op==='stats'/.test(backend) && /delete stats\\.users/.test(backend)],
+            ['backend stats route', /action === 'stats'/.test(backend) && backend.includes('function statsPublic_(')],
+            ['private records require admin authentication', /Admin authentication required/.test(backend) && /op==='list_licenses'/.test(backend) && /op==='list_downloads'/.test(backend) && /op==='stats'/.test(backend) && backend.includes('delete stats.users')],
             ['backend config route', /action === 'config'/.test(backend)],
             ['backend chat routes', /action === 'chat'/.test(backend) && /action === 'chatsend'/.test(backend)],
             ['backend app catalog functions', /function appsPublic_\(/.test(backend) && /function appsAdmin_\(/.test(backend)],
