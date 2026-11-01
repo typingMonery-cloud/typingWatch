@@ -21,14 +21,32 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Verify source version
+      - name: Patch source for fixed release
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           $source = Join-Path $env:GITHUB_WORKSPACE 'src\TypingWatch_Complete_Online.cs'
+          $build = Join-Path $env:GITHUB_WORKSPACE 'TypingWatch_Build.cs'
           if (-not (Test-Path $source)) { throw 'Source C# file was not found.' }
-          $text = [System.IO.File]::ReadAllText($source)
-          if ($text -notmatch 'const string AppVersion = "1\.0\.10";') { throw 'Source version must be 1.0.10.' }
+          $utf8 = New-Object System.Text.UTF8Encoding($false)
+          $text = [System.IO.File]::ReadAllText($source,$utf8)
+
+          $text = $text.Replace('const string AppVersion = "1.0.10";','const string AppVersion = "1.0.11";')
+          $text = $text.Replace('onlineUsersLabel.Visible=false;','onlineUsersLabel.Visible=true;')
+
+          $old = 'string api="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/version.json";'
+          $new = 'string api=OnlineServerUrl+"?action=config&_="+DateTime.UtcNow.Ticks;'
+          $text = $text.Replace($old,$new)
+
+          $oldDownload = 'string url="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/TypingWatch.exe";'
+          $newDownload = 'string url="https://github.com/"+UpdateOwner+"/"+UpdateRepository+"/raw/refs/heads/main/TypingWatch.exe";'
+          $text = $text.Replace($oldDownload,$newDownload)
+
+          $startupPattern = 'BeginInvoke\(\(MethodInvoker\)delegate\s*\{\s*StartOnlineSync\(\);\s*CheckForUpdates\(false\);\s*\}\);'
+          $startupReplacement = 'Shown+=(s,e)=>{ StartOnlineSync(); CheckForUpdates(false); };'
+          $text = [regex]::Replace($text,$startupPattern,$startupReplacement,1)
+
+          [System.IO.File]::WriteAllText($build,$text,$utf8)
 
       - name: Compile x86 Windows Forms EXE
         shell: powershell
@@ -36,15 +54,24 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe'
           if (-not (Test-Path $csc)) { throw 'C# compiler was not found.' }
-          & $csc /nologo /target:winexe /platform:x86 /optimize+ /out:TypingWatch.exe /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll src\TypingWatch_Complete_Online.cs
+          & $csc /nologo /target:winexe /platform:x86 /optimize+ /out:TypingWatch.exe /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll TypingWatch_Build.cs
           if ($LASTEXITCODE -ne 0) { throw 'C# compilation failed.' }
           if (-not (Test-Path 'TypingWatch.exe')) { throw 'TypingWatch.exe was not created.' }
-          if ((Get-Item 'TypingWatch.exe').Length -le 0) { throw 'Built EXE is empty.' }
+          if ((Get-Item 'TypingWatch.exe').Length -lt 30000) { throw 'Built EXE is unexpectedly small.' }
+
+      - name: Startup smoke test
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $p = Start-Process -FilePath (Join-Path $env:GITHUB_WORKSPACE 'TypingWatch.exe') -PassThru
+          Start-Sleep -Seconds 10
+          if ($p.HasExited) { throw "TypingWatch exited during startup test. ExitCode=$($p.ExitCode)" }
+          Stop-Process -Id $p.Id -Force
 
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TypingWatch-Windows-EXE-1.0.10
+          name: TypingWatch-Windows-EXE-1.0.11-fixed
           path: TypingWatch.exe
           if-no-files-found: error
 
@@ -56,7 +83,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add TypingWatch.exe
           if (-not (git diff --cached --quiet)) {
-            git commit -m "Build Typing Watch 1.0.10 [skip ci]"
+            git commit -m "Build Typing Watch 1.0.11 fixed [skip ci]"
             git pull --rebase origin $env:GITHUB_REF_NAME
             git push origin HEAD:$env:GITHUB_REF_NAME
           }
