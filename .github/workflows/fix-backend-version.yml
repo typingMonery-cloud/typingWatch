@@ -46,3 +46,5 @@ jobs:
             git commit -m 'Fix backend version fallback to 1.0.13'
             git push
           fi
+
+# Trigger the one-time backend version synchronization.
