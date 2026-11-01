@@ -94,8 +94,9 @@ function doGet(e) {
     else if (action === 'chat') response = chat_();
     else if (action === 'dashboard' || action === 'dashboard_data') {
       const stats = statsObject_();
+      delete stats.users;
       const config = configObject_();
-      response = json_({ok:true,success:true,stats:stats,config:config,liveUsers:stats.liveUsers,typingNow:stats.typingNow,downloadCount:config.downloadCount,activeLicenses:licenseCount_()});
+      response = json_({ok:true,success:true,stats:stats,config:config,liveUsers:stats.liveUsers,typingNow:stats.typingNow,downloadCount:config.downloadCount});
     } else if (action === 'check_license' || action === 'checklicense' || action === 'verifylicense') response = checkLicense_(params);
     else if (action === 'admin') response = admin_(params);
     else response = json_({ok:false,success:false,error:'Unknown action: '+action});
