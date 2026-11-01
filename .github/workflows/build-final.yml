@@ -79,7 +79,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add TypingWatch.exe
+          git add TypingWatch.exe src/TypingWatch_Complete_Online.cs
           if (-not (git diff --cached --quiet)) {
             git commit -m "Publish TypingWatch EXE ${{ env.APP_VERSION }} [skip ci]"
             git fetch origin $env:GITHUB_REF_NAME
