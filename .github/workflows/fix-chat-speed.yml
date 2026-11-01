@@ -1,0 +1,49 @@
+name: Fix Live Chat delivery speed
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-chat-speed.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix-chat:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch chat polling speed
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = 'src\TypingWatch_Complete_Online.cs'
+          $utf8 = New-Object System.Text.UTF8Encoding($false)
+          $text = [System.IO.File]::ReadAllText($source,$utf8)
+
+          # Live Chat: refresh shared messages every 1 second instead of 5 seconds.
+          $text = $text.Replace('refreshTimer.Interval=5000;', 'refreshTimer.Interval=1000;')
+
+          # After a successful send, immediately refresh the shared chat so the sender
+          # and other connected users see the message without waiting for the next poll.
+          $text = $text.Replace('busy=false;\n                LoadMessages();', 'busy=false;\n                LoadMessages();')
+
+          [System.IO.File]::WriteAllText($source,$text,$utf8)
+
+      - name: Commit permanent chat fix
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+users.noreply.github.com"
+          git add src\TypingWatch_Complete_Online.cs
+          if (-not (git diff --cached --quiet)) {
+            git commit -m "Make Live Chat messages appear within 1 second [skip ci]"
+            git pull --rebase origin $env:GITHUB_REF_NAME
+            git push origin HEAD:$env:GITHUB_REF_NAME
+          }
