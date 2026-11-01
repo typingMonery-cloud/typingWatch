@@ -1,9 +1,25 @@
+const WEBSITE_CONTENT_DEFAULTS = {
+  HeroOffer:'', HeroTitle:'', HeroDescription:'', DownloadButton:'', LicenseButton:'',
+  Trust1:'', Trust2:'', Trust3:'', Trust4:'', ReadyTitle:'', ReadyText:'',
+  AppsTitle:'', AppsDescription:'', FeaturesTitle:'', FeaturesDescription:'',
+  Feature1Title:'', Feature1Text:'', Feature2Title:'', Feature2Text:'',
+  Feature3Title:'', Feature3Text:'', Feature4Title:'', Feature4Text:'',
+  Feature5Title:'', Feature5Text:'', Feature6Title:'', Feature6Text:'',
+  LicenseOffer:'', LicenseYear:'', LicenseTitle:'', LicenseDescription:'',
+  LicenseSteps:'', LicenseSupportTitle:'', LicenseSupportText:'',
+  FaqTitle:'', FaqDescription:'', Faq1Q:'', Faq1A:'', Faq2Q:'', Faq2A:'',
+  Faq3Q:'', Faq3A:'', Faq4Q:'', Faq4A:'', Faq5Q:'', Faq5A:'', FooterText:''
+};
+
+const WEBSITE_CONTENT_KEYS = Object.keys(WEBSITE_CONTENT_DEFAULTS);
+
 const SHEETS = {
   LIVE_USERS: 'LiveUsers',
   CONTROL: 'Control',
   LICENSES: 'Licenses',
   DOWNLOADS: 'Downloads',
-  CHAT: 'Chat'
+  CHAT: 'Chat',
+  APPS: 'Apps'
 };
 
 function getBook_() { return SpreadsheetApp.getActiveSpreadsheet(); }
@@ -17,7 +33,8 @@ function setupSheets() {
     [SHEETS.CONTROL, ['Key','Value']],
     [SHEETS.LICENSES, ['LicenseKey','Status','UserID','ActivatedAt','ExpiresAt']],
     [SHEETS.DOWNLOADS, ['Time','Version','Source','UserID']],
-    [SHEETS.CHAT, ['Time','UserID','Message']]
+    [SHEETS.CHAT, ['Time','UserID','Message']],
+    [SHEETS.APPS, ['Name','Platform','Description','DownloadUrl','Status','Icon','SortOrder']]
   ];
   defs.forEach(d => {
     let sh = ss.getSheetByName(d[0]);
@@ -300,3 +317,79 @@ function setControl_(key,value){
   sh.appendRow([key,value]);
 }
 function dateString_(v){if(v instanceof Date)return v.toISOString();return String(v==null?'':v);}
+
+
+function appsPublic_() {
+  const sh=ensureSheet_(SHEETS.APPS,['Name','Platform','Description','DownloadUrl','Status','Icon','SortOrder']);
+  const rows=sh.getDataRange().getValues();
+  const apps=[];
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];
+    if(!r[0])continue;
+    apps.push({
+      name:String(r[0]||''),platform:String(r[1]||'OTHER'),
+      description:String(r[2]||''),downloadUrl:String(r[3]||''),
+      status:String(r[4]||'Active'),icon:String(r[5]||'📦'),
+      sortOrder:Number(r[6]||0)
+    });
+  }
+  apps.sort((a,b)=>a.sortOrder-b.sortOrder);
+  return json_({ok:true,success:true,apps:apps});
+}
+
+function appsAdmin_(b) {
+  const sh=ensureSheet_(SHEETS.APPS,['Name','Platform','Description','DownloadUrl','Status','Icon','SortOrder']);
+  const op=String(b.op||'apps').toLowerCase();
+  if(op==='apps_delete'){
+    const name=String(b.name||b.appName||'').trim();
+    if(!name)return json_({ok:false,success:false,error:'App name is required'});
+    const rows=sh.getDataRange().getValues();
+    for(let i=1;i<rows.length;i++){
+      if(String(rows[i][0]).trim()===name){sh.deleteRow(i+1);return json_({ok:true,success:true});}
+    }
+    return json_({ok:false,success:false,error:'App not found'});
+  }
+  if(op==='apps_save'){
+    let apps=b.apps||[];
+    if(typeof apps==='string'){try{apps=JSON.parse(apps);}catch(e){return json_({ok:false,success:false,error:'Apps JSON is invalid'});}}
+    if(!Array.isArray(apps))return json_({ok:false,success:false,error:'Apps must be a JSON array'});
+    if(apps.length>100)return json_({ok:false,success:false,error:'Maximum 100 apps allowed'});
+    if(sh.getLastRow()>1)sh.getRange(2,1,sh.getLastRow()-1,7).clearContent();
+    const values=apps.filter(a=>a&&String(a.name||a.Name||'').trim()).map(a=>[
+      String(a.name||a.Name||'').trim().substring(0,100),
+      String(a.platform||a.Platform||'OTHER').substring(0,40),
+      String(a.description||a.Description||'').substring(0,1000),
+      String(a.downloadUrl||a.DownloadUrl||'').substring(0,1000),
+      String(a.status||a.Status||'Active').substring(0,30),
+      String(a.icon||a.Icon||'📦').substring(0,20),
+      Number(a.sortOrder||a.SortOrder||0)
+    ]);
+    if(values.length)sh.getRange(2,1,values.length,7).setValues(values);
+    return json_({ok:true,success:true,saved:values.length});
+  }
+  return appsPublic_();
+}
+
+function websiteContent_() {
+  const c=controlMap_(),content={};
+  WEBSITE_CONTENT_KEYS.forEach(k=>{if(c[k]!==undefined&&c[k]!=='')content[k]=c[k];});
+  return json_({ok:true,success:true,content:content});
+}
+
+function saveWebsiteContent_(b) {
+  let content=b.content||{};
+  if(typeof content==='string'){
+    try{content=JSON.parse(content);}catch(e){return json_({ok:false,success:false,error:'Website content JSON is invalid'});}
+  }
+  if(!content||typeof content!=='object'||Array.isArray(content))
+    return json_({ok:false,success:false,error:'Website content must be a JSON object'});
+  let saved=0;
+  WEBSITE_CONTENT_KEYS.forEach(k=>{
+    if(Object.prototype.hasOwnProperty.call(content,k)){
+      setControl_(k,String(content[k]===null?'':content[k]).substring(0,3000));
+      saved++;
+    }
+  });
+  return json_({ok:true,success:true,saved:saved});
+}
+
