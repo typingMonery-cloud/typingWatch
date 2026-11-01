@@ -112,7 +112,7 @@ class TypingWatch : Form
     const string OnlineServerUrl =
         "https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec";
 
-    const string AppVersion = "1.0.11";
+    const string AppVersion = "1.0.12";
 
     const string UpdateOwner = "typingMonery-cloud";
     const string UpdateRepository = "typingWatch";
@@ -176,7 +176,7 @@ class TypingWatch : Form
         englishDayFile=Path.Combine(
             folder,"english-today.dat");
 
-        Text="Typing Watch | Online: --";
+        Text="TYPING WATCH | Online: --";
         ClientSize=new Size(340,585);
 
         FormBorderStyle=FormBorderStyle.FixedToolWindow;
@@ -418,7 +418,7 @@ class TypingWatch : Form
         ContextMenu licenseMenu=new ContextMenu();
 
         licenseMenu.MenuItems.Add(
-            "About Typing Watch",
+            "TYPING WATCH",
             (s,e)=>ShowAbout());
 
         licenseMenu.MenuItems.Add(
@@ -518,7 +518,7 @@ class TypingWatch : Form
     {
         if(!OnlineConfigured() || String.IsNullOrEmpty(onlineUserId))
         {
-            MessageBox.Show("Live Chat ke liye online connection zaroori hai.","Typing Watch");
+            MessageBox.Show("Live Chat ke liye online connection zaroori hai.","TYPING WATCH");
             return;
         }
 
@@ -1194,11 +1194,11 @@ class TypingWatch : Form
     void ShowAbout()
     {
         MessageBox.Show(
-            "Typing Watch\r\n\r\n"+
+            "TYPING WATCH\r\n\r\n"+
             "Typing practice time tracker\r\n"+
             "Hindi + English activity\r\n\r\n"+
             "Free-use build. Online features require the configured server.",
-            "About Typing Watch",
+            "TYPING WATCH",
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
     }
@@ -1370,7 +1370,7 @@ class TypingWatch : Form
                                             onlineUsers;
 
                                         Text=
-                                            "Typing Watch | Online: "+
+                                            "TYPING WATCH | Online: "+
                                             onlineUsers;
                                     });
                             }
@@ -1463,11 +1463,11 @@ class TypingWatch : Form
                     updateCheckRunning=false; updateButton.Enabled=true;
                     if(!newer)
                     {
-                        if(manual)MessageBox.Show("Latest version installed hai ("+AppVersion+").","Typing Watch");
+                        if(manual)MessageBox.Show("Latest version installed hai ("+AppVersion+").","TYPING WATCH");
                         return;
                     }
                     DialogResult answer=MessageBox.Show(
-                        "New Typing Watch version available: "+latest+
+                        "TYPING WATCH version available: "+latest+
                         "\r\nCurrent: "+AppVersion+
                         "\r\n\r\nUpdated EXE download karke install karein?",
                         "Update Available",MessageBoxButtons.YesNo,MessageBoxIcon.Information);
@@ -1480,7 +1480,7 @@ class TypingWatch : Form
                 BeginInvoke((MethodInvoker)delegate
                 {
                     updateCheckRunning=false; updateButton.Enabled=true;
-                    if(manual)MessageBox.Show("Update check failed.\r\n\r\n"+error,"Typing Watch",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+                    if(manual)MessageBox.Show("Update check failed.\r\n\r\n"+error,"TYPING WATCH",MessageBoxButtons.OK,MessageBoxIcon.Warning);
                 });
             }
         });
@@ -1516,12 +1516,12 @@ class TypingWatch : Form
                 "del /q \"%~f0\"\r\n";
             File.WriteAllText(script,batch,Encoding.ASCII);
             Process.Start(new ProcessStartInfo { FileName="cmd.exe",Arguments="/c \""+script+"\"",CreateNoWindow=true,UseShellExecute=false,WindowStyle=ProcessWindowStyle.Hidden });
-            MessageBox.Show("Update download ho gaya. TypingWatch restart hokar update install karega. Aapka saved typing data safe rahega.","Typing Watch Update");
+            MessageBox.Show("Update download ho gaya. TypingWatch restart hokar update install karega. Aapka saved typing data safe rahega.","TYPING WATCH Update");
             Application.Exit();
         }
         catch(Exception ex)
         {
-            MessageBox.Show("Update install nahi ho paya. Purana TypingWatch safe hai.\r\n\r\n"+ex.Message,"Typing Watch Update",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+            MessageBox.Show("Update install nahi ho paya. Purana TypingWatch safe hai.\r\n\r\n"+ex.Message,"TYPING WATCH Update",MessageBoxButtons.OK,MessageBoxIcon.Warning);
         }
     }
 
@@ -1663,7 +1663,7 @@ class TypingWatch : Form
                 Color.Red;
 
             label.Text=
-                "âŒ¨ TYPING WATCH\r\n\r\n"+
+                "TYPING WATCH\r\n\r\n"+
                 "TRIAL EXPIRED\r\n\r\n"+
                 "WATCH: ON BUT INACTIVE\r\n"+
                 "WPM Meter: LOCKED\r\n"+
@@ -1828,11 +1828,11 @@ class TypingWatch : Form
             remaining=TimeSpan.Zero;
 
         label.Text=
-            "âŒ¨ TYPING WATCH\r\n\r\n"+
+            "TYPING WATCH\r\n\r\n"+
             "Total: "+Format(total)+"\r\n"+
             "Today: "+Format(today)+"\r\n"+
-            "Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? "\\u2713 " : "  ")+Format(hindiTotal)+"\\r\\n"+
-            "English: "+(active && lastTypingLanguage==TypingLanguage.English ? "\\u2713 " : "  ")+Format(englishTotal)+"\\r\\n"+
+            "Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? "\\u2713 " : "  ")+Format(hindiTotal)+"\r\n"+
+            "English: "+(active && lastTypingLanguage==TypingLanguage.English ? "\\u2713 " : "  ")+Format(englishTotal)+"\r\n"+
             "Remaining (100h): "+Format(remaining)+"\r\n\r\n"+
             "WPM: "+((int)Math.Round(displayedWpm))+"\r\n"+
             "Keyboard: "+(active?
@@ -2039,7 +2039,7 @@ class LicenseForm:Form
     public LicenseForm()
     {
         Text=
-            "Typing Watch â€” License";
+            "TYPING WATCH â€” License";
 
         Width=500;
         Height=190;
@@ -2156,7 +2156,7 @@ class PaymentForm:Form
     public PaymentForm()
     {
         Text=
-            "Typing Watch â€” Payment / Buy License";
+            "TYPING WATCH â€” Payment / Buy License";
 
         Width=650;
         Height=610;
@@ -2175,7 +2175,7 @@ class PaymentForm:Form
             new Label()
             {
                 Text=
-                    "Typing Watch License Plans",
+                    "TYPING WATCH License Plans",
                 Left=18,
                 Top=15,
                 Width=590,
@@ -2455,7 +2455,7 @@ class ChatNamePromptForm : Form
     public string DisplayName { get { return nameBox.Text.Trim(); } }
     public ChatNamePromptForm(string current)
     {
-        Text="Typing Watch - Chat Name"; ClientSize=new Size(340,135);
+        Text="TYPING WATCH - Chat Name"; ClientSize=new Size(340,135);
         FormBorderStyle=FormBorderStyle.FixedDialog; StartPosition=FormStartPosition.CenterParent;
         MaximizeBox=false; MinimizeBox=false;
         Label prompt=new Label(); prompt.Text="Chat mein dikhne wala apna naam likhein:"; prompt.SetBounds(12,12,315,24);
@@ -2479,7 +2479,7 @@ class LiveChatForm : Form
     public LiveChatForm(string url,string id,string name,Action<string> save)
     {
         serverUrl=url; userId=id; displayName=name; saveName=save;
-        Text="Typing Watch - Live Chat"; Width=430; Height=520;
+        Text="TYPING WATCH - Live Chat"; Width=430; Height=520;
         StartPosition=FormStartPosition.CenterParent; FormBorderStyle=FormBorderStyle.FixedDialog;
         MaximizeBox=false; MinimizeBox=false; TopMost=true; BackColor=Color.White;
 
@@ -2581,7 +2581,7 @@ class LiveChatForm : Form
             {
                 busy=false;
                 if(sent)LoadMessages();
-                else Text="Typing Watch - Live Chat (message pending sync)";
+                else Text="TYPING WATCH - Live Chat (message pending sync)";
             });
         });
     }
