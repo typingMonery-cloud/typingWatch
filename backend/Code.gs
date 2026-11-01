@@ -28,7 +28,7 @@ function setupSheets() {
   const existing = control.getRange(1,1,Math.max(1,control.getLastRow()),2).getValues();
   const keys = existing.map(r => String(r[0]));
   const defaults = {
-    OnlineThresholdMinutes: '2', AppVersion: '1.0.3', Information: 'Typing Watch is online.',
+    OnlineThresholdMinutes: '2', AppVersion: '1.0.13', Information: 'Typing Watch is online.',
     DownloadCount: '0', MaintenanceMode: 'false', MinimumVersion: '1.0.0', TargetHours: '100'
   };
   Object.keys(defaults).forEach(k => { if (keys.indexOf(k) < 0) control.appendRow([k, defaults[k]]); });
@@ -141,7 +141,7 @@ function stats_() { return json_(statsObject_()); }
 
 function configObject_() {
   const c=controlMap_();
-  const version=c.AppVersion || '1.0.3';
+  const version=c.AppVersion || '1.0.13';
   const announcement=c.Information || '';
   return {ok:true,success:true,appVersion:version,version:version,information:announcement,announcement:announcement,
     onlineThresholdMinutes:Number(c.OnlineThresholdMinutes||2),downloadCount:Number(c.DownloadCount||0),
