@@ -27,6 +27,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $source = Join-Path $env:GITHUB_WORKSPACE 'src\TypingWatch_Complete_Online.cs'
           $build = Join-Path $env:GITHUB_WORKSPACE 'TypingWatch_Build.cs'
+          $backend = Join-Path $env:GITHUB_WORKSPACE 'backend\Code.gs'
           if (-not (Test-Path $source)) { throw 'Source C# file was not found.' }
           $utf8 = New-Object System.Text.UTF8Encoding($false)
           $text = [System.IO.File]::ReadAllText($source,$utf8)
@@ -72,6 +73,16 @@ jobs:
           [System.IO.File]::WriteAllText($source,$text,$utf8)
           [System.IO.File]::WriteAllText($build,$text,$utf8)
 
+          # Keep the Apps Script source aligned with the customer EXE version.
+          if (Test-Path $backend) {
+            $b = [System.IO.File]::ReadAllText($backend,$utf8)
+            $b = $b.Replace("AppVersion: '1.0.3'", "AppVersion: '1.0.13'")
+            $b = $b.Replace("const version=c.AppVersion || '1.0.3';", "const version=c.AppVersion || '1.0.13';")
+            [System.IO.File]::WriteAllText($backend,$b,$utf8)
+          }
+
+          [System.IO.File]::WriteAllText((Join-Path $env:GITHUB_WORKSPACE 'version.json'),'{"tag_name":"1.0.13"}',$utf8)
+
       - name: Compile x86 Windows Forms EXE
         shell: powershell
         run: |
@@ -105,9 +116,9 @@ jobs:
           $ErrorActionPreference = 'Stop'
           git config user.name "github-actions[bot]"
           git config user.email "41898282+users.noreply.github.com"
-          git add TypingWatch.exe src\TypingWatch_Complete_Online.cs
+          git add TypingWatch.exe src\TypingWatch_Complete_Online.cs backend\Code.gs version.json
           if (-not (git diff --cached --quiet)) {
-            git commit -m "Build Typing Watch 1.0.13 vertical language status [skip ci]"
+            git commit -m "Build Typing Watch 1.0.13 and align online backend [skip ci]"
             git pull --rebase origin $env:GITHUB_REF_NAME
             git push origin HEAD:$env:GITHUB_REF_NAME
           }
