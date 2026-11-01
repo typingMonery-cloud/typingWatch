@@ -6,6 +6,7 @@ on:
       - 'src/TypingWatch_Complete_Online.cs'
       - '.github/workflows/build-final.yml'
       - 'build/StableLiveChatForm.cs'
+      - 'index.html'
   workflow_dispatch:
 
 permissions:
