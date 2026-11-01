@@ -303,7 +303,7 @@ class TypingWatch : Form
         Controls.Add(editButton);
 
         dashboardButton.Text=
-            "âš™ Settings Dashboard";
+            "Settings Dashboard";
 
         dashboardButton.SetBounds(
             7,
@@ -321,7 +321,7 @@ class TypingWatch : Form
         Controls.Add(dashboardButton);
 
         chatButton.Text=
-            "ðŸ’¬ Live Chat";
+            "Live Chat";
 
         chatButton.SetBounds(
             7,
@@ -342,7 +342,7 @@ class TypingWatch : Form
         Controls.Add(chatButton);
 
         updateButton.Text=
-            "â†» Check for Updates";
+            "Check for Updates";
 
         updateButton.SetBounds(
             7,
