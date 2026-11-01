@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -2039,7 +2039,7 @@ class LicenseForm:Form
     public LicenseForm()
     {
         Text=
-            "TYPING WATCH â€” License";
+            "TYPING WATCH Ã¢â‚¬â€ License";
 
         Width=500;
         Height=190;
@@ -2156,7 +2156,7 @@ class PaymentForm:Form
     public PaymentForm()
     {
         Text=
-            "TYPING WATCH â€” Payment / Buy License";
+            "TYPING WATCH Ã¢â‚¬â€ Payment / Buy License";
 
         Width=650;
         Height=610;
@@ -2208,9 +2208,9 @@ class PaymentForm:Form
         plan.Items.AddRange(
             new object[]
             {
-                "Basic â€” 4 Months â€” â‚¹50",
-                "Standard â€” 6 Months â€” â‚¹60",
-                "Premium â€” 12 Months â€” â‚¹70"
+                "Basic Ã¢â‚¬â€ 4 Months Ã¢â‚¬â€ Ã¢â€šÂ¹50",
+                "Standard Ã¢â‚¬â€ 6 Months Ã¢â‚¬â€ Ã¢â€šÂ¹60",
+                "Premium Ã¢â‚¬â€ 12 Months Ã¢â‚¬â€ Ã¢â€šÂ¹70"
             });
 
         plan.SelectedIndex=1;
@@ -2349,7 +2349,7 @@ class PaymentForm:Form
 
             string selected=
                 plan.SelectedItem==null?
-                "Standard â€” 6 Months â€” â‚¹60":
+                "Standard Ã¢â‚¬â€ 6 Months Ã¢â‚¬â€ Ã¢â€šÂ¹60":
                 plan.SelectedItem.ToString();
 
             string body=
@@ -2474,7 +2474,8 @@ class LiveChatForm : Form
     ListBox messages=new ListBox();
     Button send=new Button(),changeName=new Button();
     FormsTimer refreshTimer=new FormsTimer();
-    bool busy=false;
+    bool loadBusy=false;
+    bool sendBusy=false;
 
     public LiveChatForm(string url,string id,string name,Action<string> save)
     {
@@ -2488,16 +2489,20 @@ class LiveChatForm : Form
         changeName.Text="Change Name"; changeName.SetBounds(305,12,95,27);
         changeName.Click+=(s,e)=>
         {
-            using(ChatNamePromptForm prompt=new ChatNamePromptForm(displayName))
+            try
             {
-                if(prompt.ShowDialog(this)==DialogResult.OK&&!String.IsNullOrWhiteSpace(prompt.DisplayName))
+                using(ChatNamePromptForm prompt=new ChatNamePromptForm(displayName))
                 {
-                    displayName=prompt.DisplayName;
-                    if(displayName.Length>30)displayName=displayName.Substring(0,30);
-                    if(saveName!=null)saveName(displayName);
-                    title.Text="Live Chat - Name: "+displayName;
+                    if(prompt.ShowDialog(this)==DialogResult.OK&&!String.IsNullOrWhiteSpace(prompt.DisplayName))
+                    {
+                        displayName=prompt.DisplayName;
+                        if(displayName.Length>30)displayName=displayName.Substring(0,30);
+                        if(saveName!=null)saveName(displayName);
+                        title.Text="Live Chat - Name: "+displayName;
+                    }
                 }
             }
+            catch { }
         };
 
         messages.SetBounds(15,48,385,330);
@@ -2509,14 +2514,43 @@ class LiveChatForm : Form
         note.SetBounds(15,425,385,35); note.ForeColor=Color.DimGray;
         Controls.AddRange(new Control[]{title,changeName,messages,input,send,note});
         AcceptButton=send;
-        refreshTimer.Interval=1000; refreshTimer.Tick+=(s,e)=>LoadMessages();
-        refreshTimer.Start(); FormClosed+=(s,e)=>refreshTimer.Stop(); LoadMessages();
+
+        refreshTimer.Interval=1000;
+        refreshTimer.Tick+=(s,e)=>LoadMessages();
+        refreshTimer.Start();
+        FormClosed+=(s,e)=>
+        {
+            try { refreshTimer.Stop(); } catch { }
+        };
+        LoadMessages();
+    }
+
+    bool UiAlive()
+    {
+        return !IsDisposed && !Disposing && IsHandleCreated;
+    }
+
+    void SafeUi(Action action)
+    {
+        try
+        {
+            if(!UiAlive())return;
+            BeginInvoke((MethodInvoker)delegate
+            {
+                try
+                {
+                    if(UiAlive()) action();
+                }
+                catch { }
+            });
+        }
+        catch { }
     }
 
     void LoadMessages()
     {
-        if(busy)return;
-        busy=true;
+        if(loadBusy || !UiAlive())return;
+        loadBusy=true;
         ThreadPool.QueueUserWorkItem(delegate
         {
             string text="";
@@ -2525,14 +2559,15 @@ class LiveChatForm : Form
                 ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;
                 using(WebClient wc=new WebClient())
                 {
-                    wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch/1.0.10";
+                    wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch/1.0.13";
                     text=wc.DownloadString(serverUrl+"?action=chat&_="+DateTime.UtcNow.Ticks);
                 }
             }
-            catch {}
-            BeginInvoke((MethodInvoker)delegate
+            catch { }
+
+            SafeUi(delegate
             {
-                busy=false;
+                loadBusy=false;
                 if(String.IsNullOrEmpty(text))return;
                 string data=ExtractChatValue(text,"messages");
                 if(String.IsNullOrEmpty(data))return;
@@ -2544,15 +2579,18 @@ class LiveChatForm : Form
                     if(p.Length==3)messages.Items.Add(p[0]+"  "+p[1]+": "+p[2]);
                 }
                 if(messages.Items.Count>0)messages.TopIndex=messages.Items.Count-1;
+                Text="TYPING WATCH - Live Chat";
             });
         });
     }
 
     void SendMessage()
     {
+        if(sendBusy)return;
         string msg=input.Text.Trim();
-        if(msg.Length==0||busy)return;
+        if(msg.Length==0)return;
         if(msg.Length>300)msg=msg.Substring(0,300);
+
         input.Clear();
         messages.Items.Add(DateTime.Now.ToString("HH:mm:ss")+"  "+displayName+": "+msg);
         if(messages.Items.Count>0)messages.TopIndex=messages.Items.Count-1;
@@ -2560,7 +2598,9 @@ class LiveChatForm : Form
         string safe=msg.Replace("\\","\\\\").Replace("\"","\\\"").Replace("\r"," ").Replace("\n"," ");
         string safeName=displayName.Replace("\\","\\\\").Replace("\"","\\\"").Replace("\r"," ").Replace("\n"," ");
         string payload="{\"action\":\"chatSend\",\"userId\":\""+safeName+"\",\"message\":\""+safe+"\"}";
-        busy=true;
+
+        sendBusy=true;
+        send.Enabled=false;
         ThreadPool.QueueUserWorkItem(delegate
         {
             bool sent=false;
@@ -2569,19 +2609,23 @@ class LiveChatForm : Form
                 ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;
                 using(WebClient wc=new WebClient())
                 {
-                    wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch/1.0.10";
+                    wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch/1.0.13";
                     wc.Headers[HttpRequestHeader.ContentType]="application/json; charset=utf-8";
                     string response=wc.UploadString(serverUrl,"POST",payload);
                     sent=response.IndexOf("\"ok\":true",StringComparison.OrdinalIgnoreCase)>=0||
                          response.IndexOf("\"success\":true",StringComparison.OrdinalIgnoreCase)>=0;
                 }
             }
-            catch {}
-            BeginInvoke((MethodInvoker)delegate
+            catch { }
+
+            SafeUi(delegate
             {
-                busy=false;
-                if(sent)LoadMessages();
-                else Text="TYPING WATCH - Live Chat (message pending sync)";
+                sendBusy=false;
+                send.Enabled=true;
+                if(sent)
+                    Text="TYPING WATCH - Live Chat";
+                else
+                    Text="TYPING WATCH - Live Chat (pending sync)";
             });
         });
     }
@@ -2619,7 +2663,7 @@ class SettingsDashboardForm : Form
         Action payment)
     {
         Text=
-            "TypingWatch â€” Settings Dashboard";
+            "TypingWatch Ã¢â‚¬â€ Settings Dashboard";
 
         Size=
             new Size(520,510);
@@ -3449,4 +3493,5 @@ class WarningSettingsForm:Form
         CancelButton=cancel;
     }
 }
+
 
