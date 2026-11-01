@@ -112,7 +112,7 @@ class TypingWatch : Form
     const string OnlineServerUrl =
         "https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec";
 
-    const string AppVersion = "1.0.10";
+    const string AppVersion = "1.0.11";
 
     const string UpdateOwner = "typingMonery-cloud";
     const string UpdateRepository = "typingWatch";
@@ -409,7 +409,7 @@ class TypingWatch : Form
             "Online: --";
 
         // Keep the live count in the native title bar, not over the speed meter.
-        onlineUsersLabel.Visible=false;
+        onlineUsersLabel.Visible=true;
         Controls.Add(onlineUsersLabel);
 
         LoadData();
@@ -485,11 +485,7 @@ class TypingWatch : Form
                 UnhookWindowsHookEx(hook);
         };
 
-        BeginInvoke((MethodInvoker)delegate
-        {
-            StartOnlineSync();
-            CheckForUpdates(false);
-        });
+        Shown+=(s,e)=>{ StartOnlineSync(); CheckForUpdates(false); };
 
         UpdateWatch();
     }
@@ -1451,7 +1447,7 @@ class TypingWatch : Form
             try
             {
                 ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;
-                string api="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/version.json";
+                string api=OnlineServerUrl+"?action=config&_="+DateTime.UtcNow.Ticks;
                 using(WebClient wc=new WebClient())
                 {
                     wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch/"+AppVersion;
@@ -1498,7 +1494,7 @@ class TypingWatch : Form
             string safe=version.Replace(".","_").Replace("/","_");
             string downloaded=Path.Combine(Path.GetTempPath(),"TypingWatch_update_"+safe+".exe");
             string script=Path.Combine(Path.GetTempPath(),"TypingWatch_update_"+safe+".cmd");
-            string url="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/TypingWatch.exe";
+            string url="https://github.com/"+UpdateOwner+"/"+UpdateRepository+"/raw/refs/heads/main/TypingWatch.exe";
             using(WebClient wc=new WebClient())
             {
                 wc.Headers[HttpRequestHeader.UserAgent]="TypingWatch-Updater/"+AppVersion;
@@ -1826,7 +1822,7 @@ class TypingWatch : Form
             );
 
         TimeSpan remaining=
-            TimeSpan.FromHours(50)-total;
+            TimeSpan.FromHours(100)-total;
 
         if(remaining<TimeSpan.Zero)
             remaining=TimeSpan.Zero;
@@ -1837,7 +1833,7 @@ class TypingWatch : Form
             "Today: "+Format(today)+"\r\n"+
             "Hindi: "+Format(hindiTotal)+"\r\n"+
             "English: "+Format(englishTotal)+"\r\n"+
-            "Remaining (50h): "+Format(remaining)+"\r\n\r\n"+
+            "Remaining (100h): "+Format(remaining)+"\r\n\r\n"+
             "WPM: "+((int)Math.Round(displayedWpm))+"\r\n"+
             "Keyboard: "+(active?
                 "ACTIVE":
