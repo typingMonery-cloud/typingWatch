@@ -1831,8 +1831,8 @@ class TypingWatch : Form
             "âŒ¨ TYPING WATCH\r\n\r\n"+
             "Total: "+Format(total)+"\r\n"+
             "Today: "+Format(today)+"\r\n"+
-            "Hindi: "+Format(hindiTotal)+"\r\n"+
-            "English: "+Format(englishTotal)+"\r\n"+
+            "Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? "\\u2713 " : "  ")+Format(hindiTotal)+"\\r\\n"+
+            "English: "+(active && lastTypingLanguage==TypingLanguage.English ? "\\u2713 " : "  ")+Format(englishTotal)+"\\r\\n"+
             "Remaining (100h): "+Format(remaining)+"\r\n\r\n"+
             "WPM: "+((int)Math.Round(displayedWpm))+"\r\n"+
             "Keyboard: "+(active?
