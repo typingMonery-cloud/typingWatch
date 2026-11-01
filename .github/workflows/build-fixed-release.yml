@@ -2,6 +2,11 @@ name: Build TypingWatch Fixed Release
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'src/TypingWatch_Complete_Online.cs'
+      - 'version.json'
+      - '.github/workflows/build-fixed-release.yml'
 
 permissions:
   contents: write
@@ -22,24 +27,17 @@ jobs:
           $utf8=New-Object System.Text.UTF8Encoding($false)
           $text=[System.IO.File]::ReadAllText($source,$utf8)
 
-          # Release version
           $text=$text.Replace('const string AppVersion = "1.0.10";','const string AppVersion = "1.0.11";')
-
-          # Keep live count visible in the watch.
           $text=$text.Replace('onlineUsersLabel.Visible=false;','onlineUsersLabel.Visible=true;')
 
-          # Use the Apps Script config endpoint first for update checks. This avoids
-          # failures caused by raw.githubusercontent.com/TLS on older Windows.
           $old='string api="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/version.json";'
           $new='string api=OnlineServerUrl+"?action=config&_="+DateTime.UtcNow.Ticks;'
           $text=$text.Replace($old,$new)
 
-          # Download the EXE from GitHub through the normal github.com raw route.
           $oldDownload='string url="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/TypingWatch.exe";'
           $newDownload='string url="https://github.com/"+UpdateOwner+"/"+UpdateRepository+"/raw/refs/heads/main/TypingWatch.exe";'
           $text=$text.Replace($oldDownload,$newDownload)
 
-          # Start online/update work after the form handle exists.
           $startupPattern='BeginInvoke\(\(MethodInvoker\)delegate\s*\{\s*StartOnlineSync\(\);\s*CheckForUpdates\(false\);\s*\}\);'
           $startupReplacement='Shown+=(s,e)=>{ StartOnlineSync(); CheckForUpdates(false); };'
           $text=[regex]::Replace($text,$startupPattern,$startupReplacement,1)
@@ -107,7 +105,7 @@ class Startup
         run: |
           $ErrorActionPreference='Stop'
           git config user.name 'github-actions[bot]'
-          git config user.email '41898282+users.noreply.github.com'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add TypingWatch.exe
           if(-not (git diff --cached --quiet)) {
             git commit -m 'Publish fixed TypingWatch EXE 1.0.11 [skip ci]'
