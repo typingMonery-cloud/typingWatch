@@ -35,16 +35,30 @@ jobs:
           $text = [regex]::Replace($text,'TimeSpan\.FromHours\(50\)','TimeSpan.FromHours(100)')
           $text = [regex]::Replace($text,'Remaining \(50h\):','Remaining (100h):')
 
-          # Remove any broken encoding characters from these three UI labels.
+          # Clean labels: never allow broken/garbled encoding in the three buttons.
           $text = [regex]::Replace($text,'(?m)(dashboardButton\.Text=\s*)".*?(Settings Dashboard)";','$1"$2";')
           $text = [regex]::Replace($text,'(?m)(chatButton\.Text=\s*)".*?(Live Chat)";','$1"$2";')
           $text = [regex]::Replace($text,'(?m)(updateButton\.Text=\s*)".*?(Check for Updates)";','$1"$2";')
 
-          # Show a check mark only for the language whose typing time is currently being counted.
-          $text = [regex]::Replace($text,'"Hindi: "\+Format\(hindiTotal\)\+"\\r\\n"\+','"Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? "\\u2713 " : "  ")+Format(hindiTotal)+"\\r\\n"+',1)
-          $text = [regex]::Replace($text,'"English: "\+Format\(englishTotal\)\+"\\r\\n"\+','"English: "+(active && lastTypingLanguage==TypingLanguage.English ? "\\u2713 " : "  ")+Format(englishTotal)+"\\r\\n"+',1)
+          # Fix the broken symbol in the main status heading.
+          $text = $text.Replace('âŒ¨ TYPING WATCH','TYPING WATCH')
 
-          $text = $text.Replace('const string AppVersion = "1.0.10";','const string AppVersion = "1.0.11";')
+          # Build the language lines cleanly. Use Environment.NewLine so literal \\r\\n never appears on screen.
+          $text = $text.Replace('"Hindi: "+Format(hindiTotal)+"\\r\\n"+', '"Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? ((char)0x2713).ToString()+" " : "  ")+Format(hindiTotal)+Environment.NewLine+')
+          $text = $text.Replace('"English: "+Format(englishTotal)+"\\r\\n"+', '"English: "+(active && lastTypingLanguage==TypingLanguage.English ? ((char)0x2713).ToString()+" " : "  ")+Format(englishTotal)+Environment.NewLine+')
+
+          # Replace all remaining display-only line endings in the status block with real line breaks.
+          $text = $text.Replace('"Today: "+Format(today)+"\\r\\n"+', '"Today: "+Format(today)+Environment.NewLine+')
+          $text = $text.Replace('"Remaining (100h): "+Format(remaining)+"\\r\\n\\r\\n"+', '"Remaining (100h): "+Format(remaining)+Environment.NewLine+Environment.NewLine+')
+          $text = $text.Replace('"WPM: "+((int)Math.Round(displayedWpm))+"\\r\\n"+', '"WPM: "+((int)Math.Round(displayedWpm))+Environment.NewLine+')
+          $text = $text.Replace('"Keyboard: "+(active?\n                "ACTIVE":\n                "PAUSED (5s)")+"\\r\\n"+', '"Keyboard: "+(active?\n                "ACTIVE":\n                "PAUSED (5s)")+Environment.NewLine+')
+          $text = $text.Replace('"Hook: "+(hook!=IntPtr.Zero?\n                "OK":\n                "RETRYING")+"\\r\\n"+', '"Hook: "+(hook!=IntPtr.Zero?\n                "OK":\n                "RETRYING")+Environment.NewLine+')
+
+          # Make the status area clean and vertically readable.
+          $text = $text.Replace('new Font("Segoe UI",9,FontStyle.Bold);', 'new Font("Segoe UI",8,FontStyle.Bold);')
+
+          $text = $text.Replace('const string AppVersion = "1.0.10";','const string AppVersion = "1.0.12";')
+          $text = $text.Replace('const string AppVersion = "1.0.11";','const string AppVersion = "1.0.12";')
           $text = $text.Replace('onlineUsersLabel.Visible=false;','onlineUsersLabel.Visible=true;')
 
           $old = 'string api="https://raw.githubusercontent.com/"+UpdateOwner+"/"+UpdateRepository+"/main/version.json";'
@@ -85,7 +99,7 @@ jobs:
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TypingWatch-Windows-EXE-1.0.11-fixed
+          name: TypingWatch-Windows-EXE-1.0.12-fixed
           path: TypingWatch.exe
           if-no-files-found: error
 
@@ -97,7 +111,7 @@ jobs:
           git config user.email "41898282+users.noreply.github.com"
           git add TypingWatch.exe src\TypingWatch_Complete_Online.cs
           if (-not (git diff --cached --quiet)) {
-            git commit -m "Build Typing Watch 1.0.11 with active language check marks [skip ci]"
+            git commit -m "Build Typing Watch 1.0.12 with clean status layout [skip ci]"
             git pull --rebase origin $env:GITHUB_REF_NAME
             git push origin HEAD:$env:GITHUB_REF_NAME
           }
