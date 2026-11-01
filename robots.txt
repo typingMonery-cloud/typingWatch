@@ -1,7 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /admin.html
-Disallow: /admin-apps.html
-Disallow: /admin-content.html
 
 Sitemap: https://typingmonery-cloud.github.io/typingWatch/sitemap.xml
