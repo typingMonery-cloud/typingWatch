@@ -13,6 +13,8 @@ const WEBSITE_CONTENT_DEFAULTS = {
 
 const WEBSITE_CONTENT_KEYS = Object.keys(WEBSITE_CONTENT_DEFAULTS);
 
+const LICENSE_HEADERS = ['LicenseKey','UserID','Status','PlanType','ExpiryDate','CreatedDate','Notes'];
+
 const SHEETS = {
   LIVE_USERS: 'LiveUsers',
   CONTROL: 'Control',
@@ -31,7 +33,7 @@ function setupSheets() {
   const defs = [
     [SHEETS.LIVE_USERS, ['UserID','LastSeen','Typing','Language','WPM','Version']],
     [SHEETS.CONTROL, ['Key','Value']],
-    [SHEETS.LICENSES, ['LicenseKey','Status','UserID','ActivatedAt','ExpiresAt']],
+    [SHEETS.LICENSES, LICENSE_HEADERS],
     [SHEETS.DOWNLOADS, ['Time','Version','Source','UserID']],
     [SHEETS.CHAT, ['Time','UserID','Message']],
     [SHEETS.APPS, ['Name','Platform','Description','DownloadUrl','Status','Icon','SortOrder']]
@@ -168,13 +170,22 @@ function configObject_() {
 function config_() { return json_(configObject_()); }
 
 function licenses_() {
-  const sh=ensureSheet_(SHEETS.LICENSES, ['LicenseKey','Status','UserID','ActivatedAt','ExpiresAt']);
-  const rows=sh.getDataRange().getValues();
-  const data=[];
-  for(let i=1;i<rows.length;i++) if(rows[i][0]) data.push({licenseKey:String(rows[i][0]),status:String(rows[i][1]||''),userId:String(rows[i][2]||''),activatedAt:dateString_(rows[i][3]),expiresAt:dateString_(rows[i][4])});
+  const meta=ensureLicenseSheet_(),sh=meta.sheet,c=meta.cols;
+  const rows=sh.getDataRange().getValues(),data=[];
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];
+    if(!r[c.licenseKey])continue;
+    const created=dateString_(r[c.createdDate]);
+    const expiry=dateString_(r[c.expiryDate]);
+    data.push({
+      licenseKey:String(r[c.licenseKey]||''),status:String(r[c.status]||''),
+      userId:String(r[c.userId]||''),planType:String(r[c.planType]||'Standard'),
+      activatedAt:created,createdDate:created,expiresAt:expiry,expiryDate:expiry,
+      notes:String(r[c.notes]||'')
+    });
+  }
   return json_({ok:true,success:true,licenses:data,active:data.filter(x=>x.status.toLowerCase()==='active').length,total:data.length});
 }
-
 function downloads_() {
   const sh=ensureSheet_(SHEETS.DOWNLOADS, ['Time','Version','Source','UserID']);
   const rows=sh.getDataRange().getValues();
@@ -214,23 +225,22 @@ function checkLicense_(b) {
   const key=String(b.licenseKey||b.key||'').trim();
   const userId=String(b.userId||'').trim();
   if(!key)return json_({ok:false,success:false,valid:false,error:'Missing licenseKey'});
-  const sh=ensureSheet_(SHEETS.LICENSES,['LicenseKey','Status','UserID','ActivatedAt','ExpiresAt']);
+  const meta=ensureLicenseSheet_(),sh=meta.sheet,c=meta.cols;
   const rows=sh.getDataRange().getValues();
   for(let i=1;i<rows.length;i++){
-    if(String(rows[i][0]).trim()!==key)continue;
-    const status=String(rows[i][1]||'').toLowerCase();
-    const bound=String(rows[i][2]||'').trim();
-    const expires=rows[i][4]?new Date(rows[i][4]):null;
+    if(String(rows[i][c.licenseKey]||'').trim()!==key)continue;
+    const status=String(rows[i][c.status]||'').toLowerCase();
+    const bound=String(rows[i][c.userId]||'').trim();
+    const expires=rows[i][c.expiryDate]?new Date(rows[i][c.expiryDate]):null;
     const expired=expires&&!isNaN(expires.getTime())&&expires.getTime()<Date.now();
     if(status!=='active'||expired)return json_({ok:true,success:true,valid:false,error:expired?'License expired':'License inactive'});
     if(bound&&userId&&bound!==userId)return json_({ok:true,success:true,valid:false,error:'License is bound to another user'});
-    if(!bound&&userId)sh.getRange(i+1,3).setValue(userId);
-    if(!rows[i][3])sh.getRange(i+1,4).setValue(new Date());
+    if(!bound&&userId)sh.getRange(i+1,c.userId+1).setValue(userId);
+    if(!rows[i][c.createdDate])sh.getRange(i+1,c.createdDate+1).setValue(new Date());
     return json_({ok:true,success:true,valid:true,licenseKey:key,userId:userId});
   }
   return json_({ok:true,success:true,valid:false,error:'License not found'});
 }
-
 function admin_(b) {
   const props=PropertiesService.getScriptProperties();
   const token=props.getProperty('ADMIN_TOKEN')||props.getProperty('ADMIN_KEY');
@@ -268,23 +278,37 @@ function admin_(b) {
   }
   if(op==='website_content'||op==='save_website_content'||op==='websitecontent')return saveWebsiteContent_(b);
   if(op==='license'||op==='generate_license'||op==='create_license'||op==='manage_license'){
-    const key=String(b.key||b.licenseKey||('TW-'+Utilities.getUuid().replace(/-/g,'').toUpperCase().substring(0,16)));
-    const status=String(b.status||'Active');
-    const userId=String(b.userId||'');
-    let expires=String(b.expiresAt||b.expiryDate||'');
-    if(!expires&&b.days){const d=new Date();d.setDate(d.getDate()+Math.max(1,Number(b.days)));expires=d.toISOString();}
-    const sh=ensureSheet_(SHEETS.LICENSES,['LicenseKey','Status','UserID','ActivatedAt','ExpiresAt']);
+    const email=String(b.email||b.userId||'').trim();
+    if(email.indexOf('@')<1)return json_({ok:false,success:false,error:'Valid customer email is required to generate a TypingWatch license'});
+    const userId=String(b.userId||email).trim();
+    const planType=String(b.planType||'Standard').trim()||'Standard';
+    const notes=String(b.notes||'').trim();
+    let expiryInput=String(b.expiresAt||b.expiryDate||'').trim();
+    if(!expiryInput&&b.days){
+      const d=new Date();d.setDate(d.getDate()+Math.max(1,Number(b.days)));
+      expiryInput=d.toISOString();
+    }
+    if(!expiryInput)return json_({ok:false,success:false,error:'Expiry date or license days are required'});
+    const expiryDate=new Date(expiryInput);
+    if(isNaN(expiryDate.getTime()))return json_({ok:false,success:false,error:'Invalid expiry date'});
+    const expiryKey=Utilities.formatDate(expiryDate,Session.getScriptTimeZone(),'yyyyMMdd');
+    const packageName='TYPINGWATCH';
+    const key=makeTypingWatchLicenseKey_(email,expiryKey,packageName,planType);
+    const meta=ensureLicenseSheet_(),sh=meta.sheet,c=meta.cols;
     const rows=sh.getDataRange().getValues();
-    for(let i=1;i<rows.length;i++) if(String(rows[i][0])===key) return json_({ok:false,success:false,error:'License already exists'});
-    sh.appendRow([key,status,userId,new Date(),expires]);
-    return json_({ok:true,success:true,licenseKey:key,key:key,expiresAt:expires});
+    for(let i=1;i<rows.length;i++)if(String(rows[i][c.licenseKey]||'')===key)return json_({ok:false,success:false,error:'License already exists'});
+    const row=new Array(sh.getLastColumn()).fill('');
+    row[c.licenseKey]=key;row[c.userId]=userId;row[c.status]='Active';
+    row[c.planType]=planType;row[c.expiryDate]=expiryDate;row[c.createdDate]=new Date();row[c.notes]=notes;
+    sh.appendRow(row);
+    return json_({ok:true,success:true,licenseKey:key,key:key,userId:userId,expiresAt:expiryDate.toISOString(),planType:planType});
   }
   if(op==='set_license_status'||op==='revoke_license'){
     const key=String(b.key||b.licenseKey||'');
-    const sh=ensureSheet_(SHEETS.LICENSES,['LicenseKey','Status','UserID','ActivatedAt','ExpiresAt']);
+    const meta=ensureLicenseSheet_(),sh=meta.sheet,c=meta.cols;
     const rows=sh.getDataRange().getValues();
-    for(let i=1;i<rows.length;i++) if(String(rows[i][0])===key){
-      sh.getRange(i+1,2).setValue(String(b.status||'Revoked'));
+    for(let i=1;i<rows.length;i++)if(String(rows[i][c.licenseKey]||'')===key){
+      sh.getRange(i+1,c.status+1).setValue(String(b.status||'Revoked'));
       return json_({ok:true,success:true});
     }
     return json_({ok:false,success:false,error:'License not found'});
@@ -404,4 +428,36 @@ function statsPublic_() {
     typingNow:s.typingNow,hindiTyping:s.hindiTyping,englishTyping:s.englishTyping,
     serverTime:s.serverTime
   });
+}
+
+
+function ensureLicenseSheet_() {
+  const sh=ensureSheet_(SHEETS.LICENSES,LICENSE_HEADERS);
+  let headers=sh.getRange(1,1,1,Math.max(1,sh.getLastColumn())).getValues()[0].map(x=>String(x||'').trim());
+  const aliases={
+    licenseKey:['LicenseKey','License Key'],
+    userId:['UserID','User Id','User ID'],
+    status:['Status'],
+    planType:['PlanType','Plan Type'],
+    expiryDate:['ExpiryDate','ExpiresAt','Expiry Date'],
+    createdDate:['CreatedDate','ActivatedAt','Created Date'],
+    notes:['Notes']
+  };
+  const cols={};
+  Object.keys(aliases).forEach(k=>{
+    let idx=-1;
+    for(let i=0;i<headers.length;i++)if(aliases[k].indexOf(headers[i])>=0){idx=i;break;}
+    if(idx<0){idx=headers.length;headers.push(aliases[k][0]);sh.getRange(1,idx+1).setValue(aliases[k][0]);}
+    cols[k]=idx;
+  });
+  return {sheet:sh,cols:cols};
+}
+
+function makeTypingWatchLicenseKey_(email,expiry,packageName,planCode) {
+  const salt='TW2026-OWNER-ASHISH-YADAV-CHANGE-BEFORE-RELEASE';
+  const payload=String(email).toLowerCase()+'|'+String(expiry).toUpperCase()+'|'+
+    String(packageName).trim()+'|'+String(planCode).toUpperCase()+'|'+salt;
+  const digest=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,payload,Utilities.Charset.UTF_8);
+  const hash=digest.slice(0,12).map(x=>('0'+((x+256)%256).toString(16)).slice(-2)).join('').toUpperCase();
+  return [String(email),String(expiry),String(packageName).trim(),String(planCode).toUpperCase(),hash].join('|');
 }
