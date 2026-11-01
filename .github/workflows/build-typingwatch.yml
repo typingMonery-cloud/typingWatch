@@ -42,22 +42,22 @@ jobs:
 
           # Replace the complete status text block so there can be no broken symbol or literal \\r\\n text.
           $newStatus = @'
-        label.Text=
-            "TYPING WATCH"+Environment.NewLine+Environment.NewLine+
-            "Total: "+Format(total)+Environment.NewLine+
-            "Today: "+Format(today)+Environment.NewLine+
-            "Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? ((char)0x2713).ToString()+" " : "  ")+Format(hindiTotal)+Environment.NewLine+
-            "English: "+(active && lastTypingLanguage==TypingLanguage.English ? ((char)0x2713).ToString()+" " : "  ")+Format(englishTotal)+Environment.NewLine+
-            "Remaining (100h): "+Format(remaining)+Environment.NewLine+Environment.NewLine+
-            "WPM: "+((int)Math.Round(displayedWpm))+Environment.NewLine+
-            "Keyboard: "+(active?
-                "ACTIVE":
-                "PAUSED (5s)")+Environment.NewLine+
-            "Hook: "+(hook!=IntPtr.Zero?
-                "OK":
-                "RETRYING")+Environment.NewLine+
-            "Online: "+onlineUsers;
-'@
+          label.Text=
+              "TYPING WATCH"+Environment.NewLine+Environment.NewLine+
+              "Total: "+Format(total)+Environment.NewLine+
+              "Today: "+Format(today)+Environment.NewLine+
+              "Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? ((char)0x2713).ToString()+" " : "  ")+Format(hindiTotal)+Environment.NewLine+
+              "English: "+(active && lastTypingLanguage==TypingLanguage.English ? ((char)0x2713).ToString()+" " : "  ")+Format(englishTotal)+Environment.NewLine+
+              "Remaining (100h): "+Format(remaining)+Environment.NewLine+Environment.NewLine+
+              "WPM: "+((int)Math.Round(displayedWpm))+Environment.NewLine+
+              "Keyboard: "+(active?
+                  "ACTIVE":
+                  "PAUSED (5s)")+Environment.NewLine+
+              "Hook: "+(hook!=IntPtr.Zero?
+                  "OK":
+                  "RETRYING")+Environment.NewLine+
+              "Online: "+onlineUsers;
+          '@
           $statusPattern = '(?s)label\.Text=\s*.*?"Online: "\+onlineUsers;'
           $text = [regex]::Replace($text,$statusPattern,$newStatus,1)
 
