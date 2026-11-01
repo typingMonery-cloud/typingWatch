@@ -1,0 +1,48 @@
+name: Fix Backend Version 1.0.13
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-backend-version.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update backend fallback version
+        shell: bash
+        run: |
+          set -e
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('backend/Code.gs')
+          s = p.read_text(encoding='utf-8')
+          old = s
+          s = s.replace("AppVersion: '1.0.3'", "AppVersion: '1.0.13'")
+          s = s.replace("const version=c.AppVersion || '1.0.3';", "const version=c.AppVersion || '1.0.13';")
+          if s == old:
+              print('Backend version already fixed.')
+          else:
+              p.write_text(s, encoding='utf-8')
+              print('Backend fallback version updated to 1.0.13.')
+          PY
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add backend/Code.gs
+          if git diff --cached --quiet; then
+            echo 'No backend version change needed.'
+          else
+            git commit -m 'Fix backend version fallback to 1.0.13'
+            git push
+          fi
