@@ -35,26 +35,33 @@ jobs:
           $text = [regex]::Replace($text,'TimeSpan\.FromHours\(50\)','TimeSpan.FromHours(100)')
           $text = [regex]::Replace($text,'Remaining \(50h\):','Remaining (100h):')
 
-          # Clean labels: never allow broken/garbled encoding in the three buttons.
+          # Clean the three button labels.
           $text = [regex]::Replace($text,'(?m)(dashboardButton\.Text=\s*)".*?(Settings Dashboard)";','$1"$2";')
           $text = [regex]::Replace($text,'(?m)(chatButton\.Text=\s*)".*?(Live Chat)";','$1"$2";')
           $text = [regex]::Replace($text,'(?m)(updateButton\.Text=\s*)".*?(Check for Updates)";','$1"$2";')
 
-          # Fix the broken symbol in the main status heading.
-          $text = $text.Replace('âŒ¨ TYPING WATCH','TYPING WATCH')
+          # Replace the complete status text block so there can be no broken symbol or literal \\r\\n text.
+          $newStatus = @'
+        label.Text=
+            "TYPING WATCH"+Environment.NewLine+Environment.NewLine+
+            "Total: "+Format(total)+Environment.NewLine+
+            "Today: "+Format(today)+Environment.NewLine+
+            "Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? ((char)0x2713).ToString()+" " : "  ")+Format(hindiTotal)+Environment.NewLine+
+            "English: "+(active && lastTypingLanguage==TypingLanguage.English ? ((char)0x2713).ToString()+" " : "  ")+Format(englishTotal)+Environment.NewLine+
+            "Remaining (100h): "+Format(remaining)+Environment.NewLine+Environment.NewLine+
+            "WPM: "+((int)Math.Round(displayedWpm))+Environment.NewLine+
+            "Keyboard: "+(active?
+                "ACTIVE":
+                "PAUSED (5s)")+Environment.NewLine+
+            "Hook: "+(hook!=IntPtr.Zero?
+                "OK":
+                "RETRYING")+Environment.NewLine+
+            "Online: "+onlineUsers;
+'@
+          $statusPattern = '(?s)label\.Text=\s*.*?"Online: "\+onlineUsers;'
+          $text = [regex]::Replace($text,$statusPattern,$newStatus,1)
 
-          # Build the language lines cleanly. Use Environment.NewLine so literal \\r\\n never appears on screen.
-          $text = $text.Replace('"Hindi: "+Format(hindiTotal)+"\\r\\n"+', '"Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? ((char)0x2713).ToString()+" " : "  ")+Format(hindiTotal)+Environment.NewLine+')
-          $text = $text.Replace('"English: "+Format(englishTotal)+"\\r\\n"+', '"English: "+(active && lastTypingLanguage==TypingLanguage.English ? ((char)0x2713).ToString()+" " : "  ")+Format(englishTotal)+Environment.NewLine+')
-
-          # Replace all remaining display-only line endings in the status block with real line breaks.
-          $text = $text.Replace('"Today: "+Format(today)+"\\r\\n"+', '"Today: "+Format(today)+Environment.NewLine+')
-          $text = $text.Replace('"Remaining (100h): "+Format(remaining)+"\\r\\n\\r\\n"+', '"Remaining (100h): "+Format(remaining)+Environment.NewLine+Environment.NewLine+')
-          $text = $text.Replace('"WPM: "+((int)Math.Round(displayedWpm))+"\\r\\n"+', '"WPM: "+((int)Math.Round(displayedWpm))+Environment.NewLine+')
-          $text = $text.Replace('"Keyboard: "+(active?\n                "ACTIVE":\n                "PAUSED (5s)")+"\\r\\n"+', '"Keyboard: "+(active?\n                "ACTIVE":\n                "PAUSED (5s)")+Environment.NewLine+')
-          $text = $text.Replace('"Hook: "+(hook!=IntPtr.Zero?\n                "OK":\n                "RETRYING")+"\\r\\n"+', '"Hook: "+(hook!=IntPtr.Zero?\n                "OK":\n                "RETRYING")+Environment.NewLine+')
-
-          # Make the status area clean and vertically readable.
+          # Smaller status font gives the whole block a clean top-to-bottom layout.
           $text = $text.Replace('new Font("Segoe UI",9,FontStyle.Bold);', 'new Font("Segoe UI",8,FontStyle.Bold);')
 
           $text = $text.Replace('const string AppVersion = "1.0.10";','const string AppVersion = "1.0.12";')
