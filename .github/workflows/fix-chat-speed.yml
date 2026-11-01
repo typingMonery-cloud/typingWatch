@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/fix-chat-speed.yml'
+      - 'version.json'
   workflow_dispatch:
 
 permissions:
@@ -34,8 +35,7 @@ jobs:
           $version = '{"tag_name":"1.0.13"}'
           [System.IO.File]::WriteAllText('version.json',$version,$utf8)
 
-          # The Apps Script project previously had a 1.0.3 fallback. Update the
-          # repository source so the next deployment reports the current EXE version.
+          # Update the Apps Script source used for the live Web App deployment.
           if (Test-Path $backend) {
             $b = [System.IO.File]::ReadAllText($backend,$utf8)
             $b = $b.Replace("AppVersion: '1.0.3'", "AppVersion: '1.0.13'")
