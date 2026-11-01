@@ -112,7 +112,7 @@ class TypingWatch : Form
     const string OnlineServerUrl =
         "https://script.google.com/macros/s/AKfycbwYC3hYVzLUrlbxhpDezC9fMt7748v7hN_u2SmF5vzN3XeocI7NCeHNIdeE2X0yFZECNw/exec";
 
-    const string AppVersion = "1.0.12";
+    const string AppVersion = "1.0.13";
 
     const string UpdateOwner = "typingMonery-cloud";
     const string UpdateRepository = "typingWatch";
