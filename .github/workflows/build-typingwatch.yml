@@ -49,24 +49,6 @@ jobs:
           # The check mark must be one C# Unicode escape, not a literal backslash sequence.
           $text = $text.Replace('\\\\u2713','\\u2713')
 
-          # Force the main status block to stay vertical: Hindi on one line, English on the next.
-          $statusPattern = '(?s)label\.Text=\s*"TYPING WATCH.*?"Online: "\+onlineUsers;'
-          $statusReplacement = @'
-          label.Text=
-              "TYPING WATCH\r\n\r\n"+
-              "Total: "+Format(total)+"\r\n"+
-              "Today: "+Format(today)+"\r\n"+
-              "Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? "✓ " : "  ")+Format(hindiTotal)+"\r\n"+
-              "English: "+(active && lastTypingLanguage==TypingLanguage.English ? "✓ " : "  ")+Format(englishTotal)+"\r\n"+
-              "Remaining (100h): "+Format(remaining)+"\r\n\r\n"+
-              "WPM: "+((int)Math.Round(displayedWpm))+"\r\n"+
-              "Keyboard: "+(active?"ACTIVE":"PAUSED (5s)")+"\r\n"+
-              "Hook: "+(hook!=IntPtr.Zero?"OK":"RETRYING")+"\r\n"+
-              "Online: "+onlineUsers;
-'@
-          $statusReplacement = $statusReplacement.TrimStart()
-          $text = [regex]::Replace($text,$statusPattern,[System.Text.RegularExpressions.MatchEvaluator]{ param($m) $statusReplacement },1)
-
           # Keep the status block top-to-bottom and readable.
           $text = $text.Replace('label.TextAlign=\n            ContentAlignment.MiddleCenter;', 'label.TextAlign=\n            ContentAlignment.TopCenter;')
 
