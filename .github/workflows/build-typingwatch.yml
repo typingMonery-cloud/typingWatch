@@ -35,34 +35,16 @@ jobs:
           $text = [regex]::Replace($text,'TimeSpan\.FromHours\(50\)','TimeSpan.FromHours(100)')
           $text = [regex]::Replace($text,'Remaining \(50h\):','Remaining (100h):')
 
-          # Clean the three button labels.
+          # Clean labels.
           $text = [regex]::Replace($text,'(?m)(dashboardButton\.Text=\s*)".*?(Settings Dashboard)";','$1"$2";')
           $text = [regex]::Replace($text,'(?m)(chatButton\.Text=\s*)".*?(Live Chat)";','$1"$2";')
           $text = [regex]::Replace($text,'(?m)(updateButton\.Text=\s*)".*?(Check for Updates)";','$1"$2";')
 
-          # Replace the complete status text block so there can be no broken symbol or literal \\r\\n text.
-          $newStatus = @'
-          label.Text=
-              "TYPING WATCH"+Environment.NewLine+Environment.NewLine+
-              "Total: "+Format(total)+Environment.NewLine+
-              "Today: "+Format(today)+Environment.NewLine+
-              "Hindi: "+(active && lastTypingLanguage==TypingLanguage.Hindi ? ((char)0x2713).ToString()+" " : "  ")+Format(hindiTotal)+Environment.NewLine+
-              "English: "+(active && lastTypingLanguage==TypingLanguage.English ? ((char)0x2713).ToString()+" " : "  ")+Format(englishTotal)+Environment.NewLine+
-              "Remaining (100h): "+Format(remaining)+Environment.NewLine+Environment.NewLine+
-              "WPM: "+((int)Math.Round(displayedWpm))+Environment.NewLine+
-              "Keyboard: "+(active?
-                  "ACTIVE":
-                  "PAUSED (5s)")+Environment.NewLine+
-              "Hook: "+(hook!=IntPtr.Zero?
-                  "OK":
-                  "RETRYING")+Environment.NewLine+
-              "Online: "+onlineUsers;
-          '@
-          $statusPattern = '(?s)label\.Text=\s*.*?"Online: "\+onlineUsers;'
-          $text = [regex]::Replace($text,$statusPattern,$newStatus,1)
+          # Fix the broken heading without depending on its encoded symbol.
+          $text = [regex]::Replace($text,'(?m)"[^"]*TYPING WATCH','"TYPING WATCH',1)
 
-          # Smaller status font gives the whole block a clean top-to-bottom layout.
-          $text = $text.Replace('new Font("Segoe UI",9,FontStyle.Bold);', 'new Font("Segoe UI",8,FontStyle.Bold);')
+          # Convert accidental double-escaped line breaks back to normal C# escapes.
+          $text = $text.Replace('\\r\\n','\r\n')
 
           $text = $text.Replace('const string AppVersion = "1.0.10";','const string AppVersion = "1.0.12";')
           $text = $text.Replace('const string AppVersion = "1.0.11";','const string AppVersion = "1.0.12";')
@@ -118,7 +100,7 @@ jobs:
           git config user.email "41898282+users.noreply.github.com"
           git add TypingWatch.exe src\TypingWatch_Complete_Online.cs
           if (-not (git diff --cached --quiet)) {
-            git commit -m "Build Typing Watch 1.0.12 with clean status layout [skip ci]"
+            git commit -m "Build Typing Watch 1.0.12 stable display fix [skip ci]"
             git pull --rebase origin $env:GITHUB_REF_NAME
             git push origin HEAD:$env:GITHUB_REF_NAME
           }
