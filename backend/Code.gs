@@ -301,7 +301,14 @@ function admin_(b) {
     row[c.licenseKey]=key;row[c.userId]=userId;row[c.status]='Active';
     row[c.planType]=planType;row[c.expiryDate]=expiryDate;row[c.createdDate]=new Date();row[c.notes]=notes;
     sh.appendRow(row);
-    return json_({ok:true,success:true,licenseKey:key,key:key,userId:userId,expiresAt:expiryDate.toISOString(),planType:planType});
+    let emailSent=false,emailError='';
+    try {
+      const subject='Your TypingWatch License Key';
+      const body='Hello,\\n\\nYour TypingWatch license has been generated successfully.\\n\\nIMPORTANT NOTE: Please copy the COMPLETE License Key exactly as written below. This is the full and complete license key. Do not remove or change any part of it.\\n\\nFULL LICENSE KEY:\\n'+key+'\\n\\nPlan: '+planType+'\\nValid until: '+Utilities.formatDate(expiryDate,Session.getScriptTimeZone(),'dd MMM yyyy')+'\\n\\nPlease keep this key safe.\\n\\nTypingWatch Team';
+      MailApp.sendEmail({to:email,subject:subject,body:body,name:'TypingWatch'});
+      emailSent=true;
+    } catch(mailErr) { emailError=String(mailErr && mailErr.message ? mailErr.message : mailErr); }
+    return json_({ok:true,success:true,licenseKey:key,key:key,userId:userId,expiresAt:expiryDate.toISOString(),planType:planType,emailSent:emailSent,emailError:emailError});
   }
   if(op==='set_license_status'||op==='revoke_license'){
     const key=String(b.key||b.licenseKey||'');
