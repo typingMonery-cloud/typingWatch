@@ -304,7 +304,7 @@ function admin_(b) {
     let emailSent=false,emailError='';
     try {
       const subject='Your TypingWatch License Key';
-      const body='Hello,\\n\\nYour TypingWatch license has been generated successfully.\\n\\nIMPORTANT NOTE: Please copy the COMPLETE License Key exactly as written below. This is the full and complete license key. Do not remove or change any part of it.\\n\\nFULL LICENSE KEY:\\n'+key+'\\n\\nPlan: '+planType+'\\nValid until: '+Utilities.formatDate(expiryDate,Session.getScriptTimeZone(),'dd MMM yyyy')+'\\n\\nPlease keep this key safe.\\n\\nTypingWatch Team';
+      const body='Hello,\n\nYour TypingWatch license has been generated successfully.\n\nIMPORTANT NOTE: Please copy the COMPLETE License Key exactly as written below. This is the full and complete license key. Do not remove or change any part of it.\n\nFULL LICENSE KEY:\n'+key+'\n\nPlan: '+planType+'\nValid until: '+Utilities.formatDate(expiryDate,Session.getScriptTimeZone(),'dd MMM yyyy')+'\n\nPlease keep this key safe.\n\nTypingWatch Team';
       MailApp.sendEmail({to:email,subject:subject,body:body,name:'TypingWatch'});
       emailSent=true;
     } catch(mailErr) { emailError=String(mailErr && mailErr.message ? mailErr.message : mailErr); }
